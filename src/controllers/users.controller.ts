@@ -2,14 +2,28 @@ import { registerReqBody } from '~/models/requests/User.request'
 import { registerService } from '~/services/users.service'
 import { Request, Response } from 'express'
 
-export const registerController = async (request: Request, result: Response) => {
+export const registerController = async (req: Request, res: Response) => {
   try {
-    const res = await registerService(request.body as registerReqBody)
-    result.status(201).json({
-      message: 'Register successfully!',
-      res
+    const userData = req.body as registerReqBody
+
+    const result = await registerService(userData)
+    res.status(201).json({
+      success: true,
+      message: 'User registered successfully',
+      data: {
+        id: result.insertedId,
+        name: userData.username,
+        email: userData.email
+      }
     })
   } catch (error) {
-    console.log(error)
+    console.error('Registration error:', error)
+
+    // Proper error response
+    res.status(500).json({
+      success: false,
+      message: 'Registration failed',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    })
   }
 }
