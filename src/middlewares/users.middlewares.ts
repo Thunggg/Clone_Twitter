@@ -1,4 +1,5 @@
 import { checkSchema } from 'express-validator'
+import { checkEmailExist } from '~/services/users.service'
 
 export const validateRegister = checkSchema({
   username: {
@@ -12,7 +13,12 @@ export const validateRegister = checkSchema({
   email: {
     trim: true,
     notEmpty: { errorMessage: 'Email is required' },
-    isEmail: { errorMessage: 'Invalid email' }
+    isEmail: { errorMessage: 'Invalid email' },
+    custom: {
+      options: (value: string) => {
+        return checkEmailExist(value)
+      }
+    }
   },
   password: {
     trim: true,

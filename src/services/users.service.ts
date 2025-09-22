@@ -11,3 +11,15 @@ export const registerService = async (reqBody: registerReqBody) => {
     })
   )
 }
+
+export const checkEmailExist = async (email: string) => {
+  const user = await databaseService.user.findOne({
+    email: email
+  })
+
+  if (user) {
+    throw new Error('Email already exists')
+  }
+
+  return true
+}
