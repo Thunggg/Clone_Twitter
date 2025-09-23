@@ -1,0 +1,19 @@
+export const ErrorCodes: {
+  SUCCESS: number
+  INTERNAL: number
+  VALIDATION: number
+  AUTHENTICATION: number
+  AUTHORIZATION: number
+  NOT_FOUND: number
+  CONFLICT: number
+  BAD_REQUEST: number
+} = {
+  SUCCESS: 0,
+  INTERNAL: 1000,
+  VALIDATION: 1001,
+  AUTHENTICATION: 1002,
+  AUTHORIZATION: 1003,
+  NOT_FOUND: 1004,
+  CONFLICT: 1005,
+  BAD_REQUEST: 1006
+}
