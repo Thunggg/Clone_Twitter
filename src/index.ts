@@ -1,12 +1,12 @@
 import express, { Router } from 'express'
-import databaseService from './services/database.service'
 import { usersRouter } from './routes/users.routes'
+import { connectDb } from './config/db.config'
 
 const app = express()
 
 app.use(express.json())
 
-databaseService.connect()
+connectDb()
 
 // routes
 app.get('/', (req, res) => {

@@ -1,6 +1,6 @@
 import User from '~/models/schemas/User.schema'
-import databaseService from './database.service'
 import { registerReqBody } from '~/models/requests/User.request'
+import UserModel from '~/models/schemas/User.schema'
 
 export const registerService = async (reqBody: registerReqBody) => {
   const newUser = new User({
@@ -9,13 +9,13 @@ export const registerService = async (reqBody: registerReqBody) => {
     password: reqBody.password
   })
 
-  await databaseService.user.insertOne(newUser)
+  await UserModel.create(newUser)
 
   return newUser
 }
 
 export const checkEmailExist = async (email: string) => {
-  const user = await databaseService.user.findOne({
+  const user = await UserModel.findOne({
     email: email
   })
 
