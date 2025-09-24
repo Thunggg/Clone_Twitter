@@ -1,5 +1,5 @@
 import { checkSchema } from 'express-validator'
-import { checkEmailExist } from '~/services/users.service'
+import { checkEmailExist, checkUsernameExist } from '~/services/users.service'
 
 export const validateRegister = checkSchema({
   username: {
@@ -8,6 +8,11 @@ export const validateRegister = checkSchema({
     isLength: {
       options: { min: 2, max: 50 },
       errorMessage: 'Name must be between 2-50 characters'
+    },
+    custom: {
+      options: (value: string) => {
+        return checkUsernameExist(value)
+      }
     }
   },
   email: {

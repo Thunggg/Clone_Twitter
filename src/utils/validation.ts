@@ -41,5 +41,6 @@ export const validate = (validations: ContextRunner[]) => {
 
       return res.status(400).json(apiError.toResponse())
     }
+    next()
   }
 }

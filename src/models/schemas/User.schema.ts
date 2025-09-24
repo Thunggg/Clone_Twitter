@@ -25,14 +25,16 @@ const UserSchema = new Schema(
       trim: true,
       minlength: 3,
       maxlength: 50,
-      unique: true
+      unique: true,
+      index: true
     },
     email: {
       type: String,
       required: true,
       trim: true,
       unique: true,
-      lowercase: true
+      lowercase: true,
+      index: true
     },
     date_of_birth: {
       type: Date,

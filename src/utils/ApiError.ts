@@ -3,6 +3,7 @@ export interface ApiErrorResponse {
   code: number
   message: string
   errors?: Array<{
+    field: string
     message: string
     value?: string
   }>
@@ -16,6 +17,7 @@ export class ApiError extends Error {
   public code: number
   public message: string
   public errors?: Array<{
+    field: string
     message: string
     value?: string
   }>
@@ -29,6 +31,7 @@ export class ApiError extends Error {
     status: number,
     timestamp: string,
     errors?: Array<{
+      field: string
       message: string
       value?: string
     }>,
