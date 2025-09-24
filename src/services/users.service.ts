@@ -1,13 +1,14 @@
 import User from '~/models/schemas/User.schema'
 import { registerReqBody } from '~/models/requests/User.request'
 import UserModel from '~/models/schemas/User.schema'
+import { hashPassword } from '~/utils/bcrypt'
 
 export const registerService = async (reqBody: registerReqBody) => {
   try {
     const newUser = new User({
       ...reqBody,
       date_of_birth: new Date(reqBody.date_of_birth),
-      password: reqBody.password
+      password: await hashPassword(reqBody.password)
     })
 
     await UserModel.create(newUser)

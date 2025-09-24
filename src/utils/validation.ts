@@ -10,10 +10,8 @@ import {
 import { ApiError } from './ApiError'
 import { ErrorCodes } from './errorCodes'
 
-// can be reused by many routes
 export const validate = (validations: ContextRunner[]) => {
   return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    // sequential processing, stops running validations chain if one fails.
     await Promise.all(validations.map((validation) => validation.run(req)))
 
     const formatter: ErrorFormatter<FieldValidationError> = (error) => {

@@ -1,6 +1,5 @@
-// import { UserVerifyStatus } from '~/constants/enums'
-
 import mongoose, { Schema } from 'mongoose'
+import { UserVerifyStatus } from '~/constants/enum'
 
 interface IUser extends Document {
   username: string
@@ -12,7 +11,7 @@ interface IUser extends Document {
   bio: string
   avatar: string
   cover_photo: string
-  // verify: UserVerifyStatus
+  verify: UserVerifyStatus
   created_at: Date
   updated_at: Date
 }
@@ -64,6 +63,10 @@ const UserSchema = new Schema(
     cover_photo: {
       type: String,
       default: ''
+    },
+    verify: {
+      type: Number,
+      default: UserVerifyStatus.Unverified
     }
   },
   { timestamps: true }
