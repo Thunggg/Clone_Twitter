@@ -30,6 +30,12 @@ export const errorHandler = (err: unknown, req: Request, res: Response, next: Ne
   }
 
   //default error
-  const apiError = new ApiError(ErrorCodes.INTERNAL, 'Internal server error', 500, new Date().toISOString(), [])
+  const apiError = new ApiError(
+    ErrorCodes.INTERNAL,
+    err instanceof Error ? err.message : 'Internal server error',
+    500,
+    new Date().toISOString(),
+    []
+  )
   return res.status(500).json(apiError.toResponse())
 }

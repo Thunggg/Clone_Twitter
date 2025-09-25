@@ -10,19 +10,15 @@ export const registerController = async (
   res: Response,
   next: NextFunction
 ) => {
-  try {
-    const result = await registerService(req.body)
+  const result = await registerService(req.body)
 
-    const response = new ApiSuccess(
-      ErrorCodes.SUCCESS,
-      'User registered successfully',
-      201,
-      result,
-      new Date().toISOString()
-    )
+  const response = new ApiSuccess(
+    ErrorCodes.SUCCESS,
+    'User registered successfully',
+    201,
+    result,
+    new Date().toISOString()
+  )
 
-    res.status(201).json(response.toResponse())
-  } catch (error) {
-    next(error)
-  }
+  res.status(201).json(response.toResponse())
 }

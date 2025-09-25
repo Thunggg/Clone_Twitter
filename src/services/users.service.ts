@@ -7,32 +7,27 @@ import { signToken } from '~/utils/jwt'
 import type { StringValue } from 'ms'
 
 export const registerService = async (reqBody: registerReqBody) => {
-  try {
-    const newUser = await UserModel.create(
-      new User({
-        ...reqBody,
-        date_of_birth: new Date(reqBody.date_of_birth),
-        password: await hashPassword(reqBody.password)
-      })
-    )
+  const newUser = await UserModel.create(
+    new User({
+      ...reqBody,
+      date_of_birth: new Date(reqBody.date_of_birth),
+      password: await hashPassword(reqBody.password)
+    })
+  )
 
-    const user_id = newUser._id.toString()
+  const user_id = newUser._id.toString()
 
-    const [access_token, refresh_token] = await Promise.all([
-      signAccessTokenService(user_id),
-      signRefreshTokenService(user_id)
-    ])
+  const [access_token, refresh_token] = await Promise.all([
+    signAccessTokenService(user_id),
+    signRefreshTokenService(user_id)
+  ])
 
-    const { password, ...newUserWithoutPassword } = newUser.toObject()
+  const { password, ...newUserWithoutPassword } = newUser.toObject()
 
-    return {
-      ...newUserWithoutPassword,
-      access_token: access_token,
-      refresh_token: refresh_token
-    }
-  } catch (error) {
-    console.log(error)
-    throw error
+  return {
+    ...newUserWithoutPassword,
+    access_token: access_token,
+    refresh_token: refresh_token
   }
 }
 
