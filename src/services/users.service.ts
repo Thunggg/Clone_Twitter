@@ -2,22 +2,62 @@ import User from '~/models/schemas/User.schema'
 import { registerReqBody } from '~/models/requests/User.request'
 import UserModel from '~/models/schemas/User.schema'
 import { hashPassword } from '~/utils/bcrypt'
+import { TokenType } from '~/constants/enum'
+import { signToken } from '~/utils/jwt'
+import type { StringValue } from 'ms'
 
 export const registerService = async (reqBody: registerReqBody) => {
   try {
-    const newUser = new User({
-      ...reqBody,
-      date_of_birth: new Date(reqBody.date_of_birth),
-      password: await hashPassword(reqBody.password)
-    })
+    const newUser = await UserModel.create(
+      new User({
+        ...reqBody,
+        date_of_birth: new Date(reqBody.date_of_birth),
+        password: await hashPassword(reqBody.password)
+      })
+    )
 
-    await UserModel.create(newUser)
+    const user_id = newUser._id.toString()
 
-    return newUser
+    const [access_token, refresh_token] = await Promise.all([
+      signAccessTokenService(user_id),
+      signRefreshTokenService(user_id)
+    ])
+
+    const { password, ...newUserWithoutPassword } = newUser.toObject()
+
+    return {
+      ...newUserWithoutPassword,
+      access_token: access_token,
+      refresh_token: refresh_token
+    }
   } catch (error) {
     console.log(error)
     throw error
   }
+}
+
+export const signAccessTokenService = (user_id: string) => {
+  return signToken({
+    payload: {
+      user_id,
+      token_type: TokenType.AccessToken
+    },
+    options: {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN as StringValue
+    }
+  })
+}
+
+export const signRefreshTokenService = (user_id: string) => {
+  return signToken({
+    payload: {
+      user_id,
+      token_type: TokenType.RefreshToken
+    },
+    options: {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN as StringValue
+    }
+  })
 }
 
 export const checkEmailExist = async (email: string) => {
