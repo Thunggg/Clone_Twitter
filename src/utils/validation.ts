@@ -40,5 +40,6 @@ export const validate = (validations: ContextRunner[]) => {
 
       return res.status(HTTP_STATUS.UNPROCESSABLE_ENTITY).json(apiError.toResponse())
     }
+    next()
   }
 }

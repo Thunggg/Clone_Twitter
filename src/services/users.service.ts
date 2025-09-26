@@ -6,6 +6,7 @@ import { TokenType } from '~/constants/enum'
 import { signToken } from '~/utils/jwt'
 import type { StringValue } from 'ms'
 import { HTTP_STATUS } from '~/constants/httpStatus'
+import { USERS_MESSAGES } from '~/constants/messages'
 
 export const registerService = async (reqBody: registerReqBody) => {
   const newUser = await UserModel.create(
@@ -63,7 +64,7 @@ export const checkEmailExist = async (email: string) => {
 
   if (emailExist) {
     throw {
-      message: 'Email already exists',
+      message: USERS_MESSAGES.EMAIL_IS_EXIST,
       status: HTTP_STATUS.UNPROCESSABLE_ENTITY
     }
   }
@@ -78,10 +79,21 @@ export const checkUsernameExist = async (username: string) => {
 
   if (user) {
     throw {
-      message: 'Username already exists',
+      message: USERS_MESSAGES.USER_IS_EXIST,
       status: HTTP_STATUS.UNPROCESSABLE_ENTITY
     }
   }
 
   return true
+}
+
+export const loginService = async (user_id: string) => {
+  const [access_token, refresh_token] = await Promise.all([
+    signAccessTokenService(user_id),
+    signRefreshTokenService(user_id)
+  ])
+  return {
+    access_token,
+    refresh_token
+  }
 }

@@ -33,12 +33,12 @@ export const errorHandler = (err: unknown, req: Request, res: Response, next: Ne
   //default error
   const apiError = new ApiError(
     ErrorCodes.AUTHENTICATION,
-    (err as ApiErrorResponseWithStatus).message.message || 'Internal server error',
-    (err as ApiErrorResponseWithStatus).message.status || HTTP_STATUS.INTERNAL_SERVER_ERROR,
+    (err as ApiErrorResponseWithStatus).msg.message || 'Internal server error',
+    (err as ApiErrorResponseWithStatus).msg.status || HTTP_STATUS.INTERNAL_SERVER_ERROR,
     new Date().toISOString(),
     []
   )
   return res
-    .status((err as ApiErrorResponseWithStatus).message.status || HTTP_STATUS.INTERNAL_SERVER_ERROR)
+    .status((err as ApiErrorResponseWithStatus).msg.status || HTTP_STATUS.INTERNAL_SERVER_ERROR)
     .json(apiError.toResponse())
 }

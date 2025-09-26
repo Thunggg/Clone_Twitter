@@ -24,5 +24,10 @@ export const USERS_MESSAGES = {
   DATE_OF_BIRTH_IS_INVALID: 'Date of birth is invalid',
   DATE_OF_BIRTH_MUST_BE_ISO8601: 'Date of birth must be ISO8601',
   DATE_OF_BIRTH_MUST_BE_AT_LEAST_18_YEARS_OLD: 'Date of birth must be at least 18 years old',
-  DATE_OF_BIRTH_MUST_BE_BEFORE_TODAY: 'Date of birth must be before today'
+  DATE_OF_BIRTH_MUST_BE_BEFORE_TODAY: 'Date of birth must be before today',
+  REGISER_SUCCESS: 'Register successfully',
+  LOGIN_SUCCESS: 'Login successfully',
+  USER_NOT_FOUND: 'User not found',
+  USER_IS_EXIST: 'User is exist',
+  EMAIL_IS_EXIST: 'Email is exist'
 } as const

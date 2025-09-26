@@ -13,7 +13,7 @@ export interface ApiErrorResponse {
 }
 
 export interface ApiErrorResponseWithStatus extends Omit<ApiErrorResponse, 'message'> {
-  message: { message: string; status: number }
+  msg: { message: string; status: number }
 }
 
 export class ApiError {
