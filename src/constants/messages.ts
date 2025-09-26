@@ -1,0 +1,28 @@
+export const USERS_MESSAGES = {
+  VALIDATION_ERROR: 'Validation error',
+  NAME_IS_REQUIRED: 'Name is required',
+  NAME_MUST_BE_BETWEEN_2_AND_50_CHARACTERS: 'Name must be between 2-50 characters',
+  EMAIL_IS_REQUIRED: 'Email is required',
+  EMAIL_IS_INVALID: 'Email is invalid',
+  PASSWORD_IS_REQUIRED: 'Password is required',
+  PASSWORD_MUST_BE_AT_LEAST_8_CHARACTERS: 'Password must be at least 8 characters',
+  PASSWORD_MUST_CONTAIN_AT_LEAST_1_UPPERCASE_LETTER: 'Password must contain at least 1 uppercase letter',
+  PASSWORD_MUST_CONTAIN_AT_LEAST_1_LOWERCASE_LETTER: 'Password must contain at least 1 lowercase letter',
+  PASSWORD_MUST_CONTAIN_AT_LEAST_1_NUMBER: 'Password must contain at least 1 number',
+  PASSWORD_MUST_CONTAIN_AT_LEAST_1_SPECIAL_CHARACTER: 'Password must contain at least 1 special character',
+  CONFIRM_PASSWORD_IS_REQUIRED: 'Confirm password is required',
+  CONFIRM_PASSWORD_MUST_BE_AT_LEAST_8_CHARACTERS: 'Confirm password must be at least 8 characters',
+  CONFIRM_PASSWORD_MUST_CONTAIN_AT_LEAST_1_UPPERCASE_LETTER:
+    'Confirm password must contain at least 1 uppercase letter',
+  CONFIRM_PASSWORD_MUST_CONTAIN_AT_LEAST_1_LOWERCASE_LETTER:
+    'Confirm password must contain at least 1 lowercase letter',
+  CONFIRM_PASSWORD_MUST_CONTAIN_AT_LEAST_1_NUMBER: 'Confirm password must contain at least 1 number',
+  CONFIRM_PASSWORD_MUST_CONTAIN_AT_LEAST_1_SPECIAL_CHARACTER:
+    'Confirm password must contain at least 1 special character',
+  CONFIRM_PASSWORD_AND_PASSWORD_DO_NOT_MATCH: 'Confirm password and password do not match',
+  DATE_OF_BIRTH_IS_REQUIRED: 'Date of birth is required',
+  DATE_OF_BIRTH_IS_INVALID: 'Date of birth is invalid',
+  DATE_OF_BIRTH_MUST_BE_ISO8601: 'Date of birth must be ISO8601',
+  DATE_OF_BIRTH_MUST_BE_AT_LEAST_18_YEARS_OLD: 'Date of birth must be at least 18 years old',
+  DATE_OF_BIRTH_MUST_BE_BEFORE_TODAY: 'Date of birth must be before today'
+} as const
