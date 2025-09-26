@@ -12,7 +12,11 @@ export interface ApiErrorResponse {
   stack?: string // Chỉ hiện trong development
 }
 
-export class ApiError extends Error {
+export interface ApiErrorResponseWithStatus extends Omit<ApiErrorResponse, 'message'> {
+  message: { message: string; status: number }
+}
+
+export class ApiError {
   public success: boolean = false
   public code: number
   public message: string
@@ -37,7 +41,6 @@ export class ApiError extends Error {
     }>,
     stack?: string
   ) {
-    super(message)
     this.code = code
     this.message = message
     this.status = status

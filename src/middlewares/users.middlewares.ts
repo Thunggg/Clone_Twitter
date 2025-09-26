@@ -1,4 +1,5 @@
 import { checkSchema } from 'express-validator'
+import { HTTP_STATUS } from '~/constants/httpStatus'
 import { checkEmailExist, checkUsernameExist } from '~/services/users.service'
 
 export const validateRegister = checkSchema({
@@ -43,7 +44,10 @@ export const validateRegister = checkSchema({
     custom: {
       options: (value: string, { req }) => {
         if (value != req.body.password) {
-          throw new Error('Password and confirm password do not match')
+          throw {
+            message: 'Password and confirm password do not match',
+            status: HTTP_STATUS.UNPROCESSABLE_ENTITY
+          }
         }
         return true
       }

@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from 'express'
 import { MongoError, MongoServerError } from 'mongodb'
-import { ApiError } from '~/utils/ApiError'
-import { ErrorCodes } from '~/utils/errorCodes'
+import { ApiError, ApiErrorResponseWithStatus } from '~/utils/ApiError'
+import { ErrorCodes } from '~/constants/errorCodes'
+import { HTTP_STATUS } from '~/constants/httpStatus'
 
 export const errorHandler = (err: unknown, req: Request, res: Response, next: NextFunction) => {
   // Xử lý MongoDB duplicate key error (email đã tồn tại)
@@ -31,11 +32,13 @@ export const errorHandler = (err: unknown, req: Request, res: Response, next: Ne
 
   //default error
   const apiError = new ApiError(
-    ErrorCodes.INTERNAL,
-    err instanceof Error ? err.message : 'Internal server error',
-    500,
+    ErrorCodes.AUTHENTICATION,
+    (err as ApiErrorResponseWithStatus).message.message || 'Internal server error',
+    (err as ApiErrorResponseWithStatus).message.status || HTTP_STATUS.INTERNAL_SERVER_ERROR,
     new Date().toISOString(),
     []
   )
-  return res.status(500).json(apiError.toResponse())
+  return res
+    .status((err as ApiErrorResponseWithStatus).message.status || HTTP_STATUS.INTERNAL_SERVER_ERROR)
+    .json(apiError.toResponse())
 }

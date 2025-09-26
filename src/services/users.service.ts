@@ -5,6 +5,7 @@ import { hashPassword } from '~/utils/bcrypt'
 import { TokenType } from '~/constants/enum'
 import { signToken } from '~/utils/jwt'
 import type { StringValue } from 'ms'
+import { HTTP_STATUS } from '~/constants/httpStatus'
 
 export const registerService = async (reqBody: registerReqBody) => {
   const newUser = await UserModel.create(
@@ -56,12 +57,15 @@ export const signRefreshTokenService = (user_id: string) => {
 }
 
 export const checkEmailExist = async (email: string) => {
-  const user = await UserModel.findOne({
+  const emailExist = await UserModel.findOne({
     email: email
   })
 
-  if (user) {
-    throw new Error('Email already exists')
+  if (emailExist) {
+    throw {
+      message: 'Email already exists',
+      status: HTTP_STATUS.UNPROCESSABLE_ENTITY
+    }
   }
 
   return true
@@ -73,7 +77,10 @@ export const checkUsernameExist = async (username: string) => {
   })
 
   if (user) {
-    throw new Error('Username already exists')
+    throw {
+      message: 'Username already exists',
+      status: HTTP_STATUS.UNPROCESSABLE_ENTITY
+    }
   }
 
   return true
