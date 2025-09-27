@@ -5,6 +5,7 @@ import { ErrorCodes } from '~/constants/errorCodes'
 import { HTTP_STATUS } from '~/constants/httpStatus'
 
 export const errorHandler = (err: unknown, req: Request, res: Response, next: NextFunction) => {
+  console.log(err)
   // Xử lý MongoDB duplicate key error (email đã tồn tại)
   if ((err as MongoError).code === 11000) {
     const field = Object.keys((err as MongoServerError).keyPattern ?? {})[0]

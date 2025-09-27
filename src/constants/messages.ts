@@ -29,5 +29,7 @@ export const USERS_MESSAGES = {
   LOGIN_SUCCESS: 'Login successfully',
   WRONG_USERNAME_OR_PASSWORD: 'Wrong username or password',
   USER_IS_EXIST: 'User is exist',
-  EMAIL_IS_EXIST: 'Email is exist'
+  EMAIL_IS_EXIST: 'Email is exist',
+  ACCESS_TOKEN_IS_REQUIRED: 'Access token is required',
+  UNAUTHORIZED: 'Unauthorized'
 } as const

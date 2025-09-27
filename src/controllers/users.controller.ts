@@ -35,3 +35,5 @@ export const loginController = async (req: Request<ParamsDictionary, any, loginR
   )
   return res.status(201).json(response.toResponse())
 }
+
+export const logoutController = async (req: Request, res: Response) => {}
