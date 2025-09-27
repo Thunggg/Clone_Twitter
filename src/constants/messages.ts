@@ -27,7 +27,7 @@ export const USERS_MESSAGES = {
   DATE_OF_BIRTH_MUST_BE_BEFORE_TODAY: 'Date of birth must be before today',
   REGISER_SUCCESS: 'Register successfully',
   LOGIN_SUCCESS: 'Login successfully',
-  USER_NOT_FOUND: 'User not found',
+  WRONG_USERNAME_OR_PASSWORD: 'Wrong username or password',
   USER_IS_EXIST: 'User is exist',
   EMAIL_IS_EXIST: 'Email is exist'
 } as const

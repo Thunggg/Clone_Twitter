@@ -7,6 +7,7 @@ import { signToken } from '~/utils/jwt'
 import type { StringValue } from 'ms'
 import { HTTP_STATUS } from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
+import RefreshTokenModel from '~/models/schemas/RefreshToken.schema'
 
 export const registerService = async (reqBody: registerReqBody) => {
   const newUser = await UserModel.create(
@@ -23,6 +24,12 @@ export const registerService = async (reqBody: registerReqBody) => {
     signAccessTokenService(user_id),
     signRefreshTokenService(user_id)
   ])
+
+  RefreshTokenModel.create({
+    token: refresh_token,
+    created_at: new Date(),
+    user_id: user_id
+  })
 
   const { password, ...newUserWithoutPassword } = newUser.toObject()
 
@@ -92,6 +99,11 @@ export const loginService = async (user_id: string) => {
     signAccessTokenService(user_id),
     signRefreshTokenService(user_id)
   ])
+  RefreshTokenModel.create({
+    token: refresh_token,
+    created_at: new Date(),
+    user_id: user_id
+  })
   return {
     access_token,
     refresh_token

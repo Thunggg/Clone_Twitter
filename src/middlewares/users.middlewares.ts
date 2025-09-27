@@ -3,6 +3,7 @@ import { HTTP_STATUS } from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 import UserModel from '~/models/schemas/User.schema'
 import { checkEmailExist, checkUsernameExist } from '~/services/users.service'
+import { hashPassword } from '~/utils/bcrypt'
 import { validate } from '~/utils/validation'
 
 export const validateRegister = validate(
@@ -99,12 +100,13 @@ export const validateLogin = validate(
       custom: {
         options: async (value: string, { req }) => {
           const user = await UserModel.findOne({
-            email: value
+            email: value,
+            password: await hashPassword(req.body.password)
           })
 
           if (!user) {
             throw {
-              message: USERS_MESSAGES.USER_NOT_FOUND,
+              message: USERS_MESSAGES.WRONG_USERNAME_OR_PASSWORD,
               status: HTTP_STATUS.UNAUTHORIZED
             }
           }
