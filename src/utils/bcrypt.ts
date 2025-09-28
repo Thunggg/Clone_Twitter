@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt'
 
-const SALT_ROUNDS = 10 // Thông thường từ 10 đến 12
+const SALT_ROUNDS = Number(process.env.BCRYPT_SALT_ROUNDS ?? '10')
 
 export async function hashPassword(password: string) {
   return await bcrypt.hash(password, SALT_ROUNDS)

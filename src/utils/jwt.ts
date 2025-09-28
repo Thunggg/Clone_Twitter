@@ -32,7 +32,7 @@ export const verifyToken = ({
   return new Promise<TokenPayload>((resolve, reject) => {
     jwt.verify(access_token, privateKey, function (err, decoded) {
       if (err as JsonWebTokenError) {
-        reject(err)
+        return reject(err)
       }
       resolve(decoded as TokenPayload)
     })

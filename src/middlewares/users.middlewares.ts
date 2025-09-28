@@ -18,8 +18,8 @@ export const validateRegister = validate(
         trim: true,
         notEmpty: { errorMessage: USERS_MESSAGES.NAME_IS_REQUIRED },
         isLength: {
-          options: { min: 2, max: 50 },
-          errorMessage: USERS_MESSAGES.NAME_MUST_BE_BETWEEN_2_AND_50_CHARACTERS
+          options: { min: 3, max: 50 },
+          errorMessage: USERS_MESSAGES.NAME_MUST_BE_BETWEEN_3_AND_50_CHARACTERS
         },
         custom: {
           options: (value: string) => {
@@ -81,10 +81,17 @@ export const validateRegister = validate(
         },
         custom: {
           options: (value: string) => {
-            if (value > new Date().toISOString().split('T')[0]) {
-              throw new Error(USERS_MESSAGES.DATE_OF_BIRTH_MUST_BE_BEFORE_TODAY)
-            }
-            return true
+            const dob = new Date(value)
+            const today = new Date()
+
+            if(isNaN(dob.getTime())) throw new Error(USERS_MESSAGES.DATE_OF_BIRTH_IS_INVALID)
+
+            if(dob > today) throw new Error(USERS_MESSAGES.DATE_OF_BIRTH_MUST_BE_BEFORE_TODAY)
+
+            const age = today.getFullYear() - dob.getFullYear();
+            if(age < 13) throw new Error(USERS_MESSAGES.DATE_OF_BIRTH_MUST_BE_13_YEARS_OR_OLDER)
+            
+            return true;
           }
         }
       }
@@ -192,7 +199,7 @@ export const refreshTokenValidator = validate(
               if (!refresh_token) {
                 throw new AuthenticationError(USERS_MESSAGES.USED_REFRESH_TOKEN_OR_NOT_EXIST)
               }
-              
+
               ;(req as Request).decode_refresh_token = decode_refresh_token
               return true
             } catch (error) {

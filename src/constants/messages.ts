@@ -1,7 +1,7 @@
 export const USERS_MESSAGES = {
   VALIDATION_ERROR: 'Validation error',
   NAME_IS_REQUIRED: 'Name is required',
-  NAME_MUST_BE_BETWEEN_2_AND_50_CHARACTERS: 'Name must be between 2-50 characters',
+  NAME_MUST_BE_BETWEEN_3_AND_50_CHARACTERS: 'Name must be between 3-50 characters',
   EMAIL_IS_REQUIRED: 'Email is required',
   EMAIL_IS_INVALID: 'Email is invalid',
   PASSWORD_IS_REQUIRED: 'Password is required',
@@ -25,6 +25,7 @@ export const USERS_MESSAGES = {
   DATE_OF_BIRTH_MUST_BE_ISO8601: 'Date of birth must be ISO8601',
   DATE_OF_BIRTH_MUST_BE_AT_LEAST_18_YEARS_OLD: 'Date of birth must be at least 18 years old',
   DATE_OF_BIRTH_MUST_BE_BEFORE_TODAY: 'Date of birth must be before today',
+  DATE_OF_BIRTH_MUST_BE_13_YEARS_OR_OLDER: 'Date of birth must be 13 years or older',
   REGISER_SUCCESS: 'Register successfully',
   LOGIN_SUCCESS: 'Login successfully',
   WRONG_USERNAME_OR_PASSWORD: 'Wrong username or password',

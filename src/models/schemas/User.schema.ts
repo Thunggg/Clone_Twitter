@@ -3,6 +3,10 @@ import { UserVerifyStatus } from '~/constants/enum'
 
 const UserSchema = new Schema(
   {
+    _id: {
+      type: String,
+      required: true
+    },
     username: {
       type: String,
       required: true,
@@ -56,7 +60,7 @@ const UserSchema = new Schema(
   },
   { timestamps: true }
 )
-type UserDoc = InferSchemaType<typeof UserSchema>
+export type UserDoc = InferSchemaType<typeof UserSchema>
 const UserModel: Model<UserDoc> = mongoose.model<UserDoc>('users', UserSchema)
 
 export default UserModel
