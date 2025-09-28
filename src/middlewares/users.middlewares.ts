@@ -1,9 +1,9 @@
 import { checkSchema } from 'express-validator'
-import { HTTP_STATUS } from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 import UserModel from '~/models/schemas/User.schema'
 import { checkEmailExist, checkUsernameExist } from '~/services/users.service'
 import { comparePassword, hashPassword } from '~/utils/bcrypt'
+import { AuthenticationError } from '~/utils/CustomErrors'
 import { verifyToken } from '~/utils/jwt'
 import { validate } from '~/utils/validation'
 
@@ -59,10 +59,7 @@ export const validateRegister = validate(
         custom: {
           options: (value: string, { req }) => {
             if (value != req.body.password) {
-              throw {
-                message: USERS_MESSAGES.CONFIRM_PASSWORD_AND_PASSWORD_DO_NOT_MATCH,
-                status: HTTP_STATUS.UNPROCESSABLE_ENTITY
-              }
+              return Promise.reject(USERS_MESSAGES.CONFIRM_PASSWORD_AND_PASSWORD_DO_NOT_MATCH)
             }
             return true
           }
@@ -81,10 +78,7 @@ export const validateRegister = validate(
         custom: {
           options: (value: string) => {
             if (value > new Date().toISOString().split('T')[0]) {
-              throw {
-                message: USERS_MESSAGES.DATE_OF_BIRTH_MUST_BE_BEFORE_TODAY,
-                status: HTTP_STATUS.UNPROCESSABLE_ENTITY
-              }
+              return Promise.reject(USERS_MESSAGES.DATE_OF_BIRTH_MUST_BE_BEFORE_TODAY)
             }
             return true
           }
@@ -110,19 +104,13 @@ export const validateLogin = validate(
             })
 
             if (!user) {
-              throw {
-                message: USERS_MESSAGES.WRONG_USERNAME_OR_PASSWORD,
-                status: HTTP_STATUS.UNAUTHORIZED
-              }
+              throw new AuthenticationError(USERS_MESSAGES.WRONG_USERNAME_OR_PASSWORD)
             }
 
             // so sánh theo password
             const isMatch = await comparePassword(req.body.password, user.password)
             if (!isMatch) {
-              throw {
-                message: USERS_MESSAGES.WRONG_USERNAME_OR_PASSWORD,
-                status: HTTP_STATUS.UNAUTHORIZED
-              }
+              throw new AuthenticationError(USERS_MESSAGES.WRONG_USERNAME_OR_PASSWORD)
             }
 
             req.user = user
@@ -147,7 +135,7 @@ export const validateLogin = validate(
   )
 )
 
-export const validateLogout = validate(
+export const accessTokenValidator = validate(
   checkSchema(
     {
       // trường Authorization phải để trong header tên y chang vậy
@@ -159,16 +147,10 @@ export const validateLogout = validate(
             const access_token = value.split(' ')[1]
 
             if (!access_token) {
-              throw {
-                message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
-                status: HTTP_STATUS.UNAUTHORIZED
-              }
+              throw new AuthenticationError(USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED)
             }
 
-            const decoded_authorization = await verifyToken({
-              access_token,
-              privateKey: process.env.JWT_SECRET as string
-            })
+            const decoded_authorization = await verifyToken({ access_token })
             req.authorization = decoded_authorization
             return true
           }
@@ -176,5 +158,24 @@ export const validateLogout = validate(
       }
     },
     ['headers']
+  )
+)
+
+export const refreshTokenValidator = validate(
+  checkSchema(
+    {
+      refresh_token: {
+        trim: true,
+        notEmpty: { errorMessage: USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED },
+        custom: {
+          options: async (value: string, { req }) => {
+            if (!value) {
+              throw new AuthenticationError(USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED)
+            }
+          }
+        }
+      }
+    },
+    ['body']
   )
 )

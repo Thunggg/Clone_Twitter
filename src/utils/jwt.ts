@@ -31,10 +31,7 @@ export const verifyToken = ({
   return new Promise<jwt.JwtPayload>((resolve, reject) => {
     jwt.verify(access_token, privateKey, function (err, decoded) {
       if (err as JsonWebTokenError) {
-        throw {
-          message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
-          status: HTTP_STATUS.UNAUTHORIZED
-        }
+        reject(err)
       }
       resolve(decoded as jwt.JwtPayload)
     })

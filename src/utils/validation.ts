@@ -3,6 +3,7 @@ import { ContextRunner, ErrorFormatter, FieldValidationError, validationResult }
 import { ApiError } from './ApiError'
 import { ErrorCodes } from '../constants/errorCodes'
 import { HTTP_STATUS } from '~/constants/httpStatus'
+import { BaseError } from './CustomErrors'
 
 export const validate = (validations: ContextRunner[]) => {
   return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -12,24 +13,25 @@ export const validate = (validations: ContextRunner[]) => {
       return error as FieldValidationError
     }
 
-    const errors = validationResult(req).formatWith<FieldValidationError>(formatter)
+    const result = validationResult(req).formatWith<FieldValidationError>(formatter)
+    const errors = result.array()
 
-    for (const error of errors.array()) {
-      if (error && error.msg.status !== HTTP_STATUS.UNPROCESSABLE_ENTITY) {
-        return next(error)
+    for (const e of errors) {
+      const m = e?.msg
+      if (m instanceof BaseError) {
+        return next(m)
       }
     }
 
-    if (!errors.isEmpty()) {
-      const formatedErrors = errors.array().map((error: FieldValidationError) => {
-        const { message, status } = error.msg
+    if (!result.isEmpty()) {
+      const formatedErrors = errors.map((error: FieldValidationError) => {
+        const message = typeof error.msg === 'string' ? error.msg : 'Invalid value'
         return {
           field: error.path,
           message,
           value: error.value
         }
       })
-
       const apiError = new ApiError(
         ErrorCodes.VALIDATION,
         'Validation error',
@@ -37,7 +39,6 @@ export const validate = (validations: ContextRunner[]) => {
         new Date().toISOString(),
         formatedErrors
       )
-
       return res.status(HTTP_STATUS.UNPROCESSABLE_ENTITY).json(apiError.toResponse())
     }
     next()

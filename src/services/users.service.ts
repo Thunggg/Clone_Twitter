@@ -5,9 +5,9 @@ import { hashPassword } from '~/utils/bcrypt'
 import { TokenType } from '~/constants/enum'
 import { signToken } from '~/utils/jwt'
 import type { StringValue } from 'ms'
-import { HTTP_STATUS } from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 import RefreshTokenModel from '~/models/schemas/RefreshToken.schema'
+import { ConflictError } from '~/utils/CustomErrors'
 
 export const registerService = async (reqBody: registerReqBody) => {
   const newUser = await UserModel.create(
@@ -25,7 +25,7 @@ export const registerService = async (reqBody: registerReqBody) => {
     signRefreshTokenService(user_id)
   ])
 
-  RefreshTokenModel.create({
+  await RefreshTokenModel.create({
     token: refresh_token,
     created_at: new Date(),
     user_id: user_id
@@ -70,10 +70,7 @@ export const checkEmailExist = async (email: string) => {
   })
 
   if (emailExist) {
-    throw {
-      message: USERS_MESSAGES.EMAIL_IS_EXIST,
-      status: HTTP_STATUS.UNPROCESSABLE_ENTITY
-    }
+    throw new ConflictError(USERS_MESSAGES.EMAIL_IS_EXIST)
   }
 
   return true
@@ -85,10 +82,7 @@ export const checkUsernameExist = async (username: string) => {
   })
 
   if (user) {
-    throw {
-      message: USERS_MESSAGES.USER_IS_EXIST,
-      status: HTTP_STATUS.UNPROCESSABLE_ENTITY
-    }
+    throw new ConflictError(USERS_MESSAGES.USER_IS_EXIST)
   }
 
   return true
@@ -99,7 +93,7 @@ export const loginService = async (user_id: string) => {
     signAccessTokenService(user_id),
     signRefreshTokenService(user_id)
   ])
-  RefreshTokenModel.create({
+  await RefreshTokenModel.create({
     token: refresh_token,
     created_at: new Date(),
     user_id: user_id

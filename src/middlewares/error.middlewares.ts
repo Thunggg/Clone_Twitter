@@ -3,9 +3,16 @@ import { MongoError, MongoServerError } from 'mongodb'
 import { ApiError, ApiErrorResponseWithStatus } from '~/utils/ApiError'
 import { ErrorCodes } from '~/constants/errorCodes'
 import { HTTP_STATUS } from '~/constants/httpStatus'
+import { BaseError } from '~/utils/CustomErrors'
+import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken'
 
 export const errorHandler = (err: unknown, req: Request, res: Response, next: NextFunction) => {
-  console.log(err)
+  // Custom domain errors
+  if (err instanceof BaseError) {
+    const apiError = new ApiError(err.errorCode, err.message, err.statusCode, new Date().toISOString(), [])
+    return res.status(err.statusCode).json(apiError.toResponse())
+  }
+
   // Xử lý MongoDB duplicate key error (email đã tồn tại)
   if ((err as MongoError).code === 11000) {
     const field = Object.keys((err as MongoServerError).keyPattern ?? {})[0]
@@ -29,6 +36,28 @@ export const errorHandler = (err: unknown, req: Request, res: Response, next: Ne
           formattedErrors
         ).toResponse()
       )
+  }
+
+  // JWT errors
+  if (err instanceof TokenExpiredError || (err as any)?.name === 'TokenExpiredError') {
+    const apiError = new ApiError(
+      ErrorCodes.AUTHENTICATION,
+      'Token expired',
+      HTTP_STATUS.UNAUTHORIZED,
+      new Date().toISOString(),
+      []
+    )
+    return res.status(HTTP_STATUS.UNAUTHORIZED).json(apiError.toResponse())
+  }
+
+  if (err instanceof JsonWebTokenError || (err as any)?.name === 'JsonWebTokenError') {
+    const apiError = new ApiError(
+      ErrorCodes.AUTHENTICATION,
+      'Invalid access token',
+      HTTP_STATUS.UNAUTHORIZED,
+      new Date().toISOString()
+    )
+    return res.status(HTTP_STATUS.UNAUTHORIZED).json(apiError.toResponse())
   }
 
   //default error
