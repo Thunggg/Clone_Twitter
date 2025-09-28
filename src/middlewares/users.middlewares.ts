@@ -1,6 +1,7 @@
 import { Request } from 'express'
 import { checkSchema } from 'express-validator'
 import { JsonWebTokenError } from 'jsonwebtoken'
+import { TokenType } from '~/constants/enum'
 import { USERS_MESSAGES } from '~/constants/messages'
 import RefreshTokenModel from '~/models/schemas/RefreshToken.schema'
 import UserModel from '~/models/schemas/User.schema'
@@ -140,11 +141,18 @@ export const accessTokenValidator = validate(
         custom: {
           options: async (value: string, { req }) => {
             try {
+              // kiểm tra có tồn tại authorization trong header không
               const auth = req.get('authorization')
               if(!auth) throw new AuthenticationError(USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED)
+
+              // kiểm tra scheme có phải là Bearer không
               const [scheme, access_token] = auth.split(' ')
               if(scheme !== 'Bearer' || !access_token) throw new AuthenticationError(USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED)
+              
+              // kiểm tra có đúng token_type là AccessToken không
               const decoded = await verifyToken({ access_token })
+              if(decoded.token_type !== TokenType.AccessToken) throw new AuthenticationError(USERS_MESSAGES.ACCESS_TOKEN_IS_INVALID)
+
               ;(req as Request).decode_authorization = decoded
               return true
               } catch (error) {
@@ -176,9 +184,15 @@ export const refreshTokenValidator = validate(
                   token: value
                 })
               ])
+
+              // kiểm tra có đúng token_type là RefreshToken không
+              if(decode_refresh_token.token_type !== TokenType.RefreshToken) throw new AuthenticationError(USERS_MESSAGES.REFRESH_TOKEN_IS_INVALID)
+              
+              // kiểm tra refresh_token có tồn tại không
               if (!refresh_token) {
                 throw new AuthenticationError(USERS_MESSAGES.USED_REFRESH_TOKEN_OR_NOT_EXIST)
               }
+              
               ;(req as Request).decode_refresh_token = decode_refresh_token
               return true
             } catch (error) {
