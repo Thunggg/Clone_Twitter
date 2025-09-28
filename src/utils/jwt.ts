@@ -1,6 +1,7 @@
 import jwt, { JsonWebTokenError, PrivateKey } from 'jsonwebtoken'
 import { HTTP_STATUS } from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
+import { TokenPayload } from '~/models/requests/User.request'
 
 export const signToken = ({
   payload,
@@ -28,12 +29,12 @@ export const verifyToken = ({
   access_token: string
   privateKey?: string
 }) => {
-  return new Promise<jwt.JwtPayload>((resolve, reject) => {
+  return new Promise<TokenPayload>((resolve, reject) => {
     jwt.verify(access_token, privateKey, function (err, decoded) {
       if (err as JsonWebTokenError) {
         reject(err)
       }
-      resolve(decoded as jwt.JwtPayload)
+      resolve(decoded as TokenPayload)
     })
   })
 }

@@ -1,4 +1,3 @@
-import User from '~/models/schemas/User.schema'
 import { registerReqBody } from '~/models/requests/User.request'
 import UserModel from '~/models/schemas/User.schema'
 import { hashPassword } from '~/utils/bcrypt'
@@ -11,11 +10,11 @@ import { ConflictError } from '~/utils/CustomErrors'
 
 export const registerService = async (reqBody: registerReqBody) => {
   const newUser = await UserModel.create(
-    new User({
-      ...reqBody,
+      {
+        ...reqBody,
       date_of_birth: new Date(reqBody.date_of_birth),
       password: await hashPassword(reqBody.password)
-    })
+    }
   )
 
   const user_id = newUser._id.toString()

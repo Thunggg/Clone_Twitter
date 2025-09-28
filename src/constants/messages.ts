@@ -31,6 +31,10 @@ export const USERS_MESSAGES = {
   USER_IS_EXIST: 'User is exist',
   EMAIL_IS_EXIST: 'Email is exist',
   ACCESS_TOKEN_IS_REQUIRED: 'Access token is required',
+  ACCESS_TOKEN_IS_INVALID: 'Access token is invalid',
   UNAUTHORIZED: 'Unauthorized',
-  REFRESH_TOKEN_IS_REQUIRED: 'Refresh token is required'
+  REFRESH_TOKEN_IS_REQUIRED: 'Refresh token is required',
+  REFRESH_TOKEN_IS_INVALID: 'Refresh token is invalid',
+  USED_REFRESH_TOKEN_OR_NOT_EXIST: 'Used refresh token or not exist',
+  LOGOUT_SUCCESS: 'Logout successfully'
 } as const

@@ -1,20 +1,5 @@
-import mongoose, { Schema } from 'mongoose'
+import mongoose, { InferSchemaType, Model, Schema } from 'mongoose'
 import { UserVerifyStatus } from '~/constants/enum'
-
-interface IUser extends Document {
-  username: string
-  email: string
-  date_of_birth: Date
-  password: string
-  email_verify_token: string
-  forgot_password_token: string
-  bio: string
-  avatar: string
-  cover_photo: string
-  verify: UserVerifyStatus
-  created_at: Date
-  updated_at: Date
-}
 
 const UserSchema = new Schema(
   {
@@ -71,7 +56,7 @@ const UserSchema = new Schema(
   },
   { timestamps: true }
 )
-
-const UserModel = mongoose.model<IUser>('users', UserSchema)
+type UserDoc = InferSchemaType<typeof UserSchema>
+const UserModel: Model<UserDoc> = mongoose.model<UserDoc>('users', UserSchema)
 
 export default UserModel

@@ -1,4 +1,3 @@
-import 'dotenv/config'
 import mongoose from 'mongoose'
 
 export const connectDb = async () => {
@@ -12,5 +11,6 @@ export const connectDb = async () => {
     console.log('database connection successfully')
   } catch (error) {
     console.log(`failed to connect database ${error}`)
+    process.exit(1) // dừng app nếu không thể kết nối
   }
 }

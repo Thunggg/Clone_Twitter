@@ -1,5 +1,8 @@
+import { Request } from 'express'
 import { checkSchema } from 'express-validator'
+import { JsonWebTokenError } from 'jsonwebtoken'
 import { USERS_MESSAGES } from '~/constants/messages'
+import RefreshTokenModel from '~/models/schemas/RefreshToken.schema'
 import UserModel from '~/models/schemas/User.schema'
 import { checkEmailExist, checkUsernameExist } from '~/services/users.service'
 import { comparePassword, hashPassword } from '~/utils/bcrypt'
@@ -59,7 +62,7 @@ export const validateRegister = validate(
         custom: {
           options: (value: string, { req }) => {
             if (value != req.body.password) {
-              return Promise.reject(USERS_MESSAGES.CONFIRM_PASSWORD_AND_PASSWORD_DO_NOT_MATCH)
+              throw new Error(USERS_MESSAGES.CONFIRM_PASSWORD_AND_PASSWORD_DO_NOT_MATCH)
             }
             return true
           }
@@ -78,7 +81,7 @@ export const validateRegister = validate(
         custom: {
           options: (value: string) => {
             if (value > new Date().toISOString().split('T')[0]) {
-              return Promise.reject(USERS_MESSAGES.DATE_OF_BIRTH_MUST_BE_BEFORE_TODAY)
+              throw new Error(USERS_MESSAGES.DATE_OF_BIRTH_MUST_BE_BEFORE_TODAY)
             }
             return true
           }
@@ -120,15 +123,7 @@ export const validateLogin = validate(
       },
       password: {
         trim: true,
-        notEmpty: { errorMessage: USERS_MESSAGES.PASSWORD_IS_REQUIRED },
-        isStrongPassword: {
-          errorMessage:
-            USERS_MESSAGES.PASSWORD_MUST_BE_AT_LEAST_8_CHARACTERS +
-            USERS_MESSAGES.PASSWORD_MUST_CONTAIN_AT_LEAST_1_UPPERCASE_LETTER +
-            USERS_MESSAGES.PASSWORD_MUST_CONTAIN_AT_LEAST_1_LOWERCASE_LETTER +
-            USERS_MESSAGES.PASSWORD_MUST_CONTAIN_AT_LEAST_1_NUMBER +
-            USERS_MESSAGES.PASSWORD_MUST_CONTAIN_AT_LEAST_1_SPECIAL_CHARACTER
-        }
+        notEmpty: { errorMessage: USERS_MESSAGES.PASSWORD_IS_REQUIRED }
       }
     },
     ['body']
@@ -138,21 +133,26 @@ export const validateLogin = validate(
 export const accessTokenValidator = validate(
   checkSchema(
     {
-      // trường Authorization phải để trong header tên y chang vậy
-      Authorization: {
+      // trường authorization phải để trong header tên y chang vậy
+      authorization: {
         trim: true,
         notEmpty: { errorMessage: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED },
         custom: {
           options: async (value: string, { req }) => {
-            const access_token = value.split(' ')[1]
-
-            if (!access_token) {
-              throw new AuthenticationError(USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED)
+            try {
+              const auth = req.get('authorization')
+              if(!auth) throw new AuthenticationError(USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED)
+              const [scheme, access_token] = auth.split(' ')
+              if(scheme !== 'Bearer' || !access_token) throw new AuthenticationError(USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED)
+              const decoded = await verifyToken({ access_token })
+              ;(req as Request).decode_authorization = decoded
+              return true
+              } catch (error) {
+              if (error instanceof JsonWebTokenError) {
+                throw new AuthenticationError(error.message)
+              }
+              throw error
             }
-
-            const decoded_authorization = await verifyToken({ access_token })
-            req.authorization = decoded_authorization
-            return true
           }
         }
       }
@@ -169,8 +169,23 @@ export const refreshTokenValidator = validate(
         notEmpty: { errorMessage: USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED },
         custom: {
           options: async (value: string, { req }) => {
-            if (!value) {
-              throw new AuthenticationError(USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED)
+            try {
+              const [decode_refresh_token, refresh_token] = await Promise.all([
+                verifyToken({ access_token: value }),
+                RefreshTokenModel.findOne({
+                  token: value
+                })
+              ])
+              if (!refresh_token) {
+                throw new AuthenticationError(USERS_MESSAGES.USED_REFRESH_TOKEN_OR_NOT_EXIST)
+              }
+              ;(req as Request).decode_refresh_token = decode_refresh_token
+              return true
+            } catch (error) {
+              if (error instanceof JsonWebTokenError) {
+                throw new AuthenticationError(error.message)
+              }
+              throw error
             }
           }
         }

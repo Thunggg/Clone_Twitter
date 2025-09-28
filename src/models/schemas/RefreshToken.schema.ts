@@ -3,7 +3,8 @@ import mongoose, { Schema } from 'mongoose'
 const RefreshTokenSchema = new Schema({
   token: {
     type: String,
-    required: true
+    required: true,
+    index: true
   },
   created_at: {
     type: Date,
@@ -11,7 +12,9 @@ const RefreshTokenSchema = new Schema({
   },
   user_id: {
     type: Schema.Types.ObjectId,
-    required: true
+    ref: 'users',
+    required: true,
+    index: true
   }
 })
 
