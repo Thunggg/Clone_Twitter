@@ -1,15 +1,16 @@
 import { Request } from 'express'
 import { checkSchema } from 'express-validator'
 import { JsonWebTokenError } from 'jsonwebtoken'
-import { TokenType } from '~/constants/enum'
+import { TokenType, UserVerifyStatus } from '~/constants/enum'
 import { USERS_MESSAGES } from '~/constants/messages'
 import RefreshTokenModel from '~/models/schemas/RefreshToken.schema'
 import UserModel from '~/models/schemas/User.schema'
 import { checkEmailExist, checkUsernameExist } from '~/services/users.service'
 import { comparePassword, hashPassword } from '~/utils/bcrypt'
-import { AuthenticationError } from '~/utils/CustomErrors'
+import { AuthenticationError, NotFoundError } from '~/utils/CustomErrors'
 import { verifyToken } from '~/utils/jwt'
 import { validate } from '~/utils/validation'
+import { ObjectId } from 'mongodb'
 
 export const validateRegister = validate(
   checkSchema(
@@ -234,10 +235,26 @@ export const emailVerifyTokenValidator = validate(
                 privateKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string
               })
 
+              // trường hợp token_type không phải là EmailVerifyToken
               if(decoded_email_verify_token.token_type !== TokenType.EmailVerifyToken)
                 throw new AuthenticationError(USERS_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID)
 
-              ;(req as Request).decode_email_verify_token = decoded_email_verify_token
+              // trường hợp chặn email_verify_token không khớp với email_verify_token trong user
+              const user = await UserModel.findOne({
+                _id: new ObjectId(decoded_email_verify_token.user_id as string)
+              })
+              
+              if(!user){
+                throw new NotFoundError(USERS_MESSAGES.USER_NOT_FOUND)
+              }
+
+              if(user.email_verify_token !== value || user.verify !== UserVerifyStatus.Unverified){
+                throw new AuthenticationError(USERS_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID)
+              }
+
+              ;(req as Request).decode_email_verify_token = decoded_email_verify_token;
+              ;(req as Request).user = user
+
               return true
             } catch (error) {
               if (error instanceof JsonWebTokenError) {

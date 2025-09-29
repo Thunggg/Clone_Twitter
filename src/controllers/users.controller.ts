@@ -5,16 +5,17 @@ import {
   registerReqBody,
   TokenPayload
 } from '~/models/requests/User.request'
-import { emailVerifyService, loginService, registerService } from '~/services/users.service'
+import { emailVerifyService, loginService, registerService, resendVerifyEmailService } from '~/services/users.service'
 import { NextFunction, Request, Response } from 'express'
 import { ApiSuccess } from '~/utils/ApiSuccess'
 import { ErrorCodes } from '~/constants/errorCodes'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { USERS_MESSAGES } from '~/constants/messages'
 import RefreshTokenModel from '~/models/schemas/RefreshToken.schema'
-import { AuthenticationError, NotFoundError } from '~/utils/CustomErrors'
-import UserModel from '~/models/schemas/User.schema'
+import { AuthenticationError, ConflictError, NotFoundError } from '~/utils/CustomErrors'
+import UserModel, { UserDoc } from '~/models/schemas/User.schema'
 import { ObjectId } from 'mongodb'
+import { UserVerifyStatus } from '~/constants/enum'
 
 export const registerController = async (req: Request<ParamsDictionary, any, registerReqBody>, res: Response) => {
   const result = await registerService(req.body)
@@ -58,7 +59,9 @@ export const logoutController = async (req: Request<ParamsDictionary, any, logou
     throw new AuthenticationError(USERS_MESSAGES.REFRESH_TOKEN_IS_INVALID)
 
   // bên validate đã kiểm tra và chắc chắn có rồi nên ko cần check lại nữa
+  // phải ràng buộc xóa chung với user_id để tránh bị hacker phá session của user
   await RefreshTokenModel.deleteOne({
+    user_id: new ObjectId(user_id_from_access_token as string),
     token: refresh_token
   })
 
@@ -113,6 +116,29 @@ export const emailVerifyController = async (req: Request, res: Response) => {
         USERS_MESSAGES.EMAIL_VERIFY_SUCCESS,
         200,
         result,
+        new Date().toISOString()
+      ).toResponse()
+    )
+}
+
+export const resendEmailVerifyController = async (req: Request, res: Response) => {
+  const { user_id } = req.decode_authorization as TokenPayload
+  const user = req.user as UserDoc
+
+  if(user.verify === UserVerifyStatus.Verified){
+    throw new ConflictError(USERS_MESSAGES.EMAIL_ALREADY_VERIFIED)
+  }
+
+  await resendVerifyEmailService(user_id)
+
+  return res
+    .status(200)
+    .json(
+      new ApiSuccess(
+        ErrorCodes.SUCCESS,
+        USERS_MESSAGES.EMAIL_VERIFY_RESEND_SUCCESS,
+        200,
+        null,
         new Date().toISOString()
       ).toResponse()
     )

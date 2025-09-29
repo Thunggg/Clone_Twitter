@@ -145,3 +145,19 @@ export const emailVerifyService = async (user_id: string) => {
     refresh_token
   }
 }
+
+export const resendVerifyEmailService = async (user_id: string) => {
+  const emailVerifyToken = await signEmailVerifyTokenService(user_id)
+
+  await UserModel.updateOne(
+    {
+      _id: new ObjectId(user_id as string)
+    },
+    {
+      $set: {
+        email_verify_token: emailVerifyToken,
+        updatedAt: new Date()
+      }
+    }
+  )
+}

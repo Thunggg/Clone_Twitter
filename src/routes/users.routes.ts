@@ -3,20 +3,71 @@ import {
   emailVerifyController,
   loginController,
   logoutController,
-  registerController
+  registerController,
+  resendEmailVerifyController
 } from '~/controllers/users.controller'
 import {
   validateLogin,
   accessTokenValidator,
   validateRegister,
   refreshTokenValidator,
-  emailVerifyTokenValidator
+  emailVerifyTokenValidator,
 } from '~/middlewares/users.middlewares'
 import { wrapRequestHandler } from '~/utils/handlers'
 
 export const usersRouter = Router()
 
+/**
+ * Description: Đăng ký tài khoản mới, tạo user và trả về access/refresh token.
+ * Path: POST /users/register
+ * Method: POST
+ * Header: Content-Type: application/json
+ * Body:
+ * - username: string (3-50 ký tự)
+ * - email: string (định dạng email)
+ * - password: string (mạnh, >= 8 ký tự)
+ * - confirm_password: string (khớp với password)
+ * - date_of_birth: string (ISO 8601)
+ */
 usersRouter.post('/register', validateRegister, wrapRequestHandler(registerController))
+
+/**
+ * Description: Đăng nhập bằng email và password, trả về access/refresh token.
+ * Path: POST /users/login
+ * Method: POST
+ * Header: Content-Type: application/json
+ * Body:
+ * - email: string
+ * - password: string
+ */
 usersRouter.post('/login', validateLogin, wrapRequestHandler(loginController))
+
+/**
+ * Description: Đăng xuất, thu hồi refresh_token hiện tại.
+ * Path: POST /users/logout
+ * Method: POST
+ * Header: Authorization: Bearer <access_token>; Content-Type: application/json
+ * Body:
+ * - refresh_token: string
+ */
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapRequestHandler(logoutController))
+
+/**
+ * Description: Xác thực email bằng email_verify_token, cập nhật trạng thái verify và phát hành cặp token mới.
+ * Path: POST /users/verify-email
+ * Method: POST
+ * Header: Content-Type: application/json
+ * Body:
+ * - email_verify_token: string
+ */
 usersRouter.post('/verify-email', emailVerifyTokenValidator, wrapRequestHandler(emailVerifyController))
+
+/**
+ * Description: Gửi lại email xác thực.
+ * Path: POST /users/resend-verify-email
+ * Method: POST
+ * Header: Authorization: Bearer <access_token>
+ * Body: {}
+ * 
+ */
+usersRouter.post('/resend-verify-email', accessTokenValidator, wrapRequestHandler(resendEmailVerifyController))
