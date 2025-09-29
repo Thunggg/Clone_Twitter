@@ -4,7 +4,8 @@ const RefreshTokenSchema = new Schema({
   token: {
     type: String,
     required: true,
-    index: true
+    index: true,
+    unique: true
   },
   created_at: {
     type: Date,

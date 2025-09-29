@@ -4,7 +4,7 @@ import { UserVerifyStatus } from '~/constants/enum'
 const UserSchema = new Schema(
   {
     _id: {
-      type: String,
+      type: Schema.Types.ObjectId,
       required: true
     },
     username: {

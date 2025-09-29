@@ -1,23 +1,27 @@
 import { registerReqBody } from '~/models/requests/User.request'
 import UserModel from '~/models/schemas/User.schema'
 import { hashPassword } from '~/utils/bcrypt'
-import { TokenType } from '~/constants/enum'
+import { TokenType, UserVerifyStatus } from '~/constants/enum'
 import { signToken } from '~/utils/jwt'
 import type { StringValue } from 'ms'
 import { USERS_MESSAGES } from '~/constants/messages'
 import RefreshTokenModel from '~/models/schemas/RefreshToken.schema'
 import { ConflictError } from '~/utils/CustomErrors'
+import { ObjectId } from 'mongodb'
 
 export const registerService = async (reqBody: registerReqBody) => {
-  const newUser = await UserModel.create(
-      {
-        ...reqBody,
-      date_of_birth: new Date(reqBody.date_of_birth),
-      password: await hashPassword(reqBody.password)
-    }
-  )
+  const _id = new ObjectId()
+  const user_id = _id.toString()
 
-  const user_id = newUser._id.toString()
+  const emailVerifyToken = await signEmailVerifyTokenService(user_id)
+
+  const newUser = await UserModel.create({
+    ...reqBody,
+    _id,
+    email_verify_token: emailVerifyToken,
+    date_of_birth: new Date(reqBody.date_of_birth),
+    password: await hashPassword(reqBody.password)
+  })
 
   const [access_token, refresh_token] = await Promise.all([
     signAccessTokenService(user_id),
@@ -45,6 +49,7 @@ export const signAccessTokenService = (user_id: string) => {
       user_id,
       token_type: TokenType.AccessToken
     },
+    privateKey: process.env.JWT_SECRET_ACCESS_TOKEN as string,
     options: {
       expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN as StringValue
     }
@@ -57,8 +62,22 @@ export const signRefreshTokenService = (user_id: string) => {
       user_id,
       token_type: TokenType.RefreshToken
     },
+    privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string,
     options: {
       expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN as StringValue
+    }
+  })
+}
+
+export const signEmailVerifyTokenService = (user_id: string) => {
+  return signToken({
+    payload: {
+      user_id,
+      token_type: TokenType.EmailVerifyToken
+    },
+    privateKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string,
+    options: {
+      expiresIn: process.env.EMAIL_VERIFY_TOKEN_EXPIRES_IN as StringValue
     }
   })
 }
@@ -97,6 +116,30 @@ export const loginService = async (user_id: string) => {
     created_at: new Date(),
     user_id: user_id
   })
+  return {
+    access_token,
+    refresh_token
+  }
+}
+
+export const emailVerifyService = async (user_id: string) => {
+  const [access_token, refresh_token] = await Promise.all([
+    signAccessTokenService(user_id),
+    signRefreshTokenService(user_id),
+    UserModel.updateOne(
+      {
+        _id: new ObjectId(user_id as string)
+      },
+      {
+        $set: {
+          email_verify_token: '',
+          verify: UserVerifyStatus.Verified,
+          updatedAt: new Date()
+        }
+      }
+    )
+  ])
+
   return {
     access_token,
     refresh_token

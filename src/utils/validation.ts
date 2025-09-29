@@ -3,7 +3,8 @@ import { ContextRunner, ErrorFormatter, FieldValidationError, validationResult }
 import { ApiError } from './ApiError'
 import { ErrorCodes } from '../constants/errorCodes'
 import { HTTP_STATUS } from '~/constants/httpStatus'
-import { BaseError } from './CustomErrors'
+import { AuthenticationError, BaseError } from './CustomErrors'
+import { JsonWebTokenError } from 'jsonwebtoken'
 
 export const validate = (validations: ContextRunner[]) => {
   return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -17,6 +18,10 @@ export const validate = (validations: ContextRunner[]) => {
     const errors = result.array()
 
     for (const e of errors) {
+      if (e.path === 'authorization' || e.path === 'refresh_token' || e.path === 'email_verify_token') {
+        return next(new AuthenticationError(e.msg))
+      }
+
       const m = e?.msg
       if (m instanceof BaseError) {
         return next(m)
