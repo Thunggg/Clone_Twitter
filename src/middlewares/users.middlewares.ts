@@ -165,6 +165,7 @@ export const accessTokenValidator = validate(
               })
               if (decoded.token_type !== TokenType.AccessToken)
                 throw new AuthenticationError(USERS_MESSAGES.ACCESS_TOKEN_IS_INVALID)
+              
               ;(req as Request).decode_authorization = decoded
               return true
             } catch (error) {

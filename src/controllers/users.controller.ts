@@ -124,7 +124,7 @@ export const emailVerifyController = async (req: Request, res: Response) => {
 export const resendEmailVerifyController = async (req: Request, res: Response) => {
   const { user_id } = req.decode_authorization as TokenPayload
   const user = req.user as UserDoc
-
+  
   if(user.verify === UserVerifyStatus.Verified){
     throw new ConflictError(USERS_MESSAGES.EMAIL_ALREADY_VERIFIED)
   }

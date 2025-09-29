@@ -70,4 +70,4 @@ usersRouter.post('/verify-email', emailVerifyTokenValidator, wrapRequestHandler(
  * Body: {}
  * 
  */
-usersRouter.post('/resend-verify-email', accessTokenValidator, wrapRequestHandler(resendEmailVerifyController))
+usersRouter.post('/resend-verify-email', accessTokenValidator, emailVerifyTokenValidator, wrapRequestHandler(resendEmailVerifyController))

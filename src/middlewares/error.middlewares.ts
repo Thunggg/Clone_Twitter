@@ -7,6 +7,7 @@ import { BaseError } from '~/utils/CustomErrors'
 import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken'
 
 export const errorHandler = (err: unknown, req: Request, res: Response, next: NextFunction) => {
+  console.log(err)
   // Custom domain errors
   if (err instanceof BaseError) {
     const apiError = new ApiError(err.errorCode, err.message, err.statusCode, new Date().toISOString(), [])
