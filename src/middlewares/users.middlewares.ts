@@ -293,3 +293,50 @@ export const forgotPasswordTokenValidator = validate(
     ['body']
   )
 )
+
+export const verifyForgotPasswordTokenValidator = validate(
+  checkSchema(
+    {
+      forgot_password_token: {
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            // nếu không tồn tại forgot_password_token thì trả về lỗi
+            if (!value) throw new AuthenticationError(USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_REQUIRED)
+
+            try {
+              const decoded_forgot_password_token = await verifyToken({
+                token: value,
+                privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string
+              })
+
+              const user = await UserModel.findOne({
+                _id: new ObjectId(decoded_forgot_password_token.user_id as string),
+                forgot_password_token: value
+              })
+
+              // nếu user không tồn tại
+              if (!user) {
+                throw new NotFoundError(USERS_MESSAGES.USER_NOT_FOUND)
+              }
+
+              // nếu forgot_password_token không khớp với forgot_password_token trong user
+              if (user.forgot_password_token !== value) {
+                throw new AuthenticationError(USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID)
+              }
+
+              ;(req as Request).user = user
+              return true
+            } catch (error) {
+              if (error instanceof JsonWebTokenError) {
+                throw new AuthenticationError(error.message)
+              }
+              throw error
+            }
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)

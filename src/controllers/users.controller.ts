@@ -171,3 +171,18 @@ export const forgotPasswordController = async (
       ).toResponse()
     )
 }
+
+export const verifyForgotPasswordController = async (req: Request, res: Response) => {
+  // ko cần xóa forgot_password_token vì có trường hợp user mở lên nhưng để đó hôm sau người ta mới vào đổi mật khẩu
+  return res
+    .status(200)
+    .json(
+      new ApiSuccess(
+        ErrorCodes.SUCCESS,
+        USERS_MESSAGES.VERIFY_FORGOT_PASSWORD_SUCCESS,
+        200,
+        null,
+        new Date().toISOString()
+      ).toResponse()
+    )
+}

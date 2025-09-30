@@ -5,7 +5,8 @@ import {
   loginController,
   logoutController,
   registerController,
-  resendEmailVerifyController
+  resendEmailVerifyController,
+  verifyForgotPasswordController
 } from '~/controllers/users.controller'
 import {
   validateLogin,
@@ -13,13 +14,14 @@ import {
   validateRegister,
   refreshTokenValidator,
   emailVerifyTokenValidator,
-  forgotPasswordTokenValidator
+  forgotPasswordTokenValidator,
+  verifyForgotPasswordTokenValidator
 } from '~/middlewares/users.middlewares'
 import { wrapRequestHandler } from '~/utils/handlers'
 
 export const usersRouter = Router()
 
-/**
+/*
  * Description: Đăng ký tài khoản mới, tạo user và trả về access/refresh token.
  * Path: POST /users/register
  * Method: POST
@@ -33,7 +35,7 @@ export const usersRouter = Router()
  */
 usersRouter.post('/register', validateRegister, wrapRequestHandler(registerController))
 
-/**
+/*
  * Description: Đăng nhập bằng email và password, trả về access/refresh token.
  * Path: POST /users/login
  * Method: POST
@@ -44,7 +46,7 @@ usersRouter.post('/register', validateRegister, wrapRequestHandler(registerContr
  */
 usersRouter.post('/login', validateLogin, wrapRequestHandler(loginController))
 
-/**
+/*
  * Description: Đăng xuất, thu hồi refresh_token hiện tại.
  * Path: POST /users/logout
  * Method: POST
@@ -54,7 +56,7 @@ usersRouter.post('/login', validateLogin, wrapRequestHandler(loginController))
  */
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapRequestHandler(logoutController))
 
-/**
+/*
  * Description: Xác thực email bằng email_verify_token, cập nhật trạng thái verify và phát hành cặp token mới.
  * Path: POST /users/verify-email
  * Method: POST
@@ -64,13 +66,12 @@ usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapReq
  */
 usersRouter.post('/verify-email', emailVerifyTokenValidator, wrapRequestHandler(emailVerifyController))
 
-/**
+/*
  * Description: Gửi lại email xác thực.
  * Path: POST /users/resend-verify-email
  * Method: POST
  * Header: Authorization: Bearer <access_token>
  * Body: {}
- *
  */
 usersRouter.post(
   '/resend-verify-email',
@@ -86,3 +87,15 @@ usersRouter.post(
  * Body: {email: string}
  */
 usersRouter.post('/forgot-password', forgotPasswordTokenValidator, wrapRequestHandler(forgotPasswordController))
+
+/*
+ * Description: Verify forgot password token
+ * Path: POST /verify-forgot-password
+ * Method: POST
+ * Body: {forgot_password_token: string}
+ */
+usersRouter.post(
+  '/verify-forgot-password',
+  verifyForgotPasswordTokenValidator,
+  wrapRequestHandler(verifyForgotPasswordController)
+)
