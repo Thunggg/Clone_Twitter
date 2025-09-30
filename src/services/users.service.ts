@@ -82,6 +82,19 @@ export const signEmailVerifyTokenService = (user_id: string) => {
   })
 }
 
+export const signForgotPasswordTokenService = (user_id: string) => {
+  return signToken({
+    payload: {
+      user_id,
+      token_type: TokenType.EmailVerifyToken
+    },
+    privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string,
+    options: {
+      expiresIn: process.env.EMAIL_FORGOT_PASSWORD_EXPIRES_IN as StringValue
+    }
+  })
+}
+
 export const checkEmailExist = async (email: string) => {
   const emailExist = await UserModel.findOne({
     email: email
@@ -160,4 +173,26 @@ export const resendVerifyEmailService = async (user_id: string) => {
       }
     }
   )
+}
+
+export const forgotPasswordService = async (user_id: string) => {
+  const forgotPasswordToken = await signForgotPasswordTokenService(user_id)
+
+  await UserModel.updateOne(
+    {
+      _id: new ObjectId(user_id as string)
+    },
+    {
+      $set: {
+        forgot_password_token: forgotPasswordToken,
+        updatedAt: new Date()
+      }
+    }
+  )
+
+  // gửi email reset password
+
+  return {
+    forgot_password_token: forgotPasswordToken
+  }
 }

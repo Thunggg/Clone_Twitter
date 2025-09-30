@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import {
   emailVerifyController,
+  forgotPasswordController,
   loginController,
   logoutController,
   registerController,
@@ -12,6 +13,7 @@ import {
   validateRegister,
   refreshTokenValidator,
   emailVerifyTokenValidator,
+  forgotPasswordTokenValidator
 } from '~/middlewares/users.middlewares'
 import { wrapRequestHandler } from '~/utils/handlers'
 
@@ -68,6 +70,19 @@ usersRouter.post('/verify-email', emailVerifyTokenValidator, wrapRequestHandler(
  * Method: POST
  * Header: Authorization: Bearer <access_token>
  * Body: {}
- * 
+ *
  */
-usersRouter.post('/resend-verify-email', accessTokenValidator, emailVerifyTokenValidator, wrapRequestHandler(resendEmailVerifyController))
+usersRouter.post(
+  '/resend-verify-email',
+  accessTokenValidator,
+  emailVerifyTokenValidator,
+  wrapRequestHandler(resendEmailVerifyController)
+)
+
+/**
+ * Description: Submit email to reset password
+ * Path: GET /forgot-password
+ * Method: POST
+ * Body: {email: string}
+ */
+usersRouter.post('/forgot-password', forgotPasswordTokenValidator, wrapRequestHandler(forgotPasswordController))

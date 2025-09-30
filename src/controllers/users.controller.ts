@@ -1,11 +1,18 @@
 import {
   emailVerifyReqBody,
+  forgotPasswordReqBody,
   loginReqBody,
   logoutReqBody,
   registerReqBody,
   TokenPayload
 } from '~/models/requests/User.request'
-import { emailVerifyService, loginService, registerService, resendVerifyEmailService } from '~/services/users.service'
+import {
+  emailVerifyService,
+  forgotPasswordService,
+  loginService,
+  registerService,
+  resendVerifyEmailService
+} from '~/services/users.service'
 import { NextFunction, Request, Response } from 'express'
 import { ApiSuccess } from '~/utils/ApiSuccess'
 import { ErrorCodes } from '~/constants/errorCodes'
@@ -124,8 +131,8 @@ export const emailVerifyController = async (req: Request, res: Response) => {
 export const resendEmailVerifyController = async (req: Request, res: Response) => {
   const { user_id } = req.decode_authorization as TokenPayload
   const user = req.user as UserDoc
-  
-  if(user.verify === UserVerifyStatus.Verified){
+
+  if (user.verify === UserVerifyStatus.Verified) {
     throw new ConflictError(USERS_MESSAGES.EMAIL_ALREADY_VERIFIED)
   }
 
@@ -139,6 +146,27 @@ export const resendEmailVerifyController = async (req: Request, res: Response) =
         USERS_MESSAGES.EMAIL_VERIFY_RESEND_SUCCESS,
         200,
         null,
+        new Date().toISOString()
+      ).toResponse()
+    )
+}
+
+export const forgotPasswordController = async (
+  req: Request<ParamsDictionary, any, forgotPasswordReqBody>,
+  res: Response
+) => {
+  const { _id } = req.user as UserDoc
+
+  const result = await forgotPasswordService(_id.toString())
+
+  return res
+    .status(200)
+    .json(
+      new ApiSuccess(
+        ErrorCodes.SUCCESS,
+        USERS_MESSAGES.FORGOT_PASSWORD_SUCCESS,
+        200,
+        result,
         new Date().toISOString()
       ).toResponse()
     )

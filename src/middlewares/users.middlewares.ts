@@ -165,7 +165,6 @@ export const accessTokenValidator = validate(
               })
               if (decoded.token_type !== TokenType.AccessToken)
                 throw new AuthenticationError(USERS_MESSAGES.ACCESS_TOKEN_IS_INVALID)
-              
               ;(req as Request).decode_authorization = decoded
               return true
             } catch (error) {
@@ -237,23 +236,23 @@ export const emailVerifyTokenValidator = validate(
               })
 
               // trường hợp token_type không phải là EmailVerifyToken
-              if(decoded_email_verify_token.token_type !== TokenType.EmailVerifyToken)
+              if (decoded_email_verify_token.token_type !== TokenType.EmailVerifyToken)
                 throw new AuthenticationError(USERS_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID)
 
               // trường hợp chặn email_verify_token không khớp với email_verify_token trong user
               const user = await UserModel.findOne({
                 _id: new ObjectId(decoded_email_verify_token.user_id as string)
               })
-              
-              if(!user){
+
+              if (!user) {
                 throw new NotFoundError(USERS_MESSAGES.USER_NOT_FOUND)
               }
 
-              if(user.email_verify_token !== value || user.verify !== UserVerifyStatus.Unverified){
+              if (user.email_verify_token !== value || user.verify !== UserVerifyStatus.Unverified) {
                 throw new AuthenticationError(USERS_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID)
               }
 
-              ;(req as Request).decode_email_verify_token = decoded_email_verify_token;
+              ;(req as Request).decode_email_verify_token = decoded_email_verify_token
               ;(req as Request).user = user
 
               return true
@@ -263,6 +262,30 @@ export const emailVerifyTokenValidator = validate(
               }
               throw error
             }
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)
+
+export const forgotPasswordTokenValidator = validate(
+  checkSchema(
+    {
+      email: {
+        trim: true,
+        notEmpty: { errorMessage: USERS_MESSAGES.EMAIL_IS_REQUIRED },
+        isEmail: { errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID },
+        custom: {
+          options: async (value: string, { req }) => {
+            const user = await UserModel.findOne({ email: value })
+            if (!user) {
+              throw new NotFoundError(USERS_MESSAGES.USER_NOT_FOUND)
+            }
+
+            ;(req as Request).user = user
+            return true
           }
         }
       }
