@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { checkSchema } from 'express-validator'
+import { checkSchema, ParamSchema } from 'express-validator'
 import { JsonWebTokenError } from 'jsonwebtoken'
 import { TokenType, UserVerifyStatus } from '~/constants/enum'
 import { USERS_MESSAGES } from '~/constants/messages'
@@ -11,6 +11,80 @@ import { AuthenticationError, NotFoundError } from '~/utils/CustomErrors'
 import { verifyToken } from '~/utils/jwt'
 import { validate } from '~/utils/validation'
 import { ObjectId } from 'mongodb'
+
+const forgotPasswordTokenSchema: ParamSchema = {
+  trim: true,
+  custom: {
+    options: async (value: string, { req }) => {
+      // nếu không tồn tại forgot_password_token thì trả về lỗi
+      if (!value) throw new AuthenticationError(USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_REQUIRED)
+
+      try {
+        const decoded_forgot_password_token = await verifyToken({
+          token: value,
+          privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string
+        })
+
+        const user = await UserModel.findOne({
+          _id: new ObjectId(decoded_forgot_password_token.user_id as string),
+          forgot_password_token: value
+        })
+
+        // nếu user không tồn tại
+        if (!user) {
+          throw new NotFoundError(USERS_MESSAGES.USER_NOT_FOUND)
+        }
+
+        // nếu forgot_password_token không khớp với forgot_password_token trong user
+        if (user.forgot_password_token !== value) {
+          throw new AuthenticationError(USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID)
+        }
+
+        ;(req as Request).user = user
+        return true
+      } catch (error) {
+        if (error instanceof JsonWebTokenError) {
+          throw new AuthenticationError(error.message)
+        }
+        throw error
+      }
+    }
+  }
+}
+
+const passwordSchema: ParamSchema = {
+  trim: true,
+  notEmpty: { errorMessage: USERS_MESSAGES.PASSWORD_IS_REQUIRED },
+  isStrongPassword: {
+    errorMessage:
+      USERS_MESSAGES.PASSWORD_MUST_BE_AT_LEAST_8_CHARACTERS +
+      USERS_MESSAGES.PASSWORD_MUST_CONTAIN_AT_LEAST_1_UPPERCASE_LETTER +
+      USERS_MESSAGES.PASSWORD_MUST_CONTAIN_AT_LEAST_1_LOWERCASE_LETTER +
+      USERS_MESSAGES.PASSWORD_MUST_CONTAIN_AT_LEAST_1_NUMBER +
+      USERS_MESSAGES.PASSWORD_MUST_CONTAIN_AT_LEAST_1_SPECIAL_CHARACTER
+  }
+}
+
+const confirmPasswordSchema: ParamSchema = {
+  trim: true,
+  notEmpty: { errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_IS_REQUIRED },
+  isStrongPassword: {
+    errorMessage:
+      USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_AT_LEAST_8_CHARACTERS +
+      USERS_MESSAGES.CONFIRM_PASSWORD_MUST_CONTAIN_AT_LEAST_1_UPPERCASE_LETTER +
+      USERS_MESSAGES.CONFIRM_PASSWORD_MUST_CONTAIN_AT_LEAST_1_LOWERCASE_LETTER +
+      USERS_MESSAGES.CONFIRM_PASSWORD_MUST_CONTAIN_AT_LEAST_1_NUMBER +
+      USERS_MESSAGES.CONFIRM_PASSWORD_MUST_CONTAIN_AT_LEAST_1_SPECIAL_CHARACTER
+  },
+  custom: {
+    options: (value: string, { req }) => {
+      if (value != req.body.password) {
+        throw new Error(USERS_MESSAGES.CONFIRM_PASSWORD_AND_PASSWORD_DO_NOT_MATCH)
+      }
+      return true
+    }
+  }
+}
 
 export const validateRegister = validate(
   checkSchema(
@@ -38,38 +112,8 @@ export const validateRegister = validate(
           }
         }
       },
-      password: {
-        trim: true,
-        notEmpty: { errorMessage: USERS_MESSAGES.PASSWORD_IS_REQUIRED },
-        isStrongPassword: {
-          errorMessage:
-            USERS_MESSAGES.PASSWORD_MUST_BE_AT_LEAST_8_CHARACTERS +
-            USERS_MESSAGES.PASSWORD_MUST_CONTAIN_AT_LEAST_1_UPPERCASE_LETTER +
-            USERS_MESSAGES.PASSWORD_MUST_CONTAIN_AT_LEAST_1_LOWERCASE_LETTER +
-            USERS_MESSAGES.PASSWORD_MUST_CONTAIN_AT_LEAST_1_NUMBER +
-            USERS_MESSAGES.PASSWORD_MUST_CONTAIN_AT_LEAST_1_SPECIAL_CHARACTER
-        }
-      },
-      confirm_password: {
-        trim: true,
-        notEmpty: { errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_IS_REQUIRED },
-        isStrongPassword: {
-          errorMessage:
-            USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_AT_LEAST_8_CHARACTERS +
-            USERS_MESSAGES.CONFIRM_PASSWORD_MUST_CONTAIN_AT_LEAST_1_UPPERCASE_LETTER +
-            USERS_MESSAGES.CONFIRM_PASSWORD_MUST_CONTAIN_AT_LEAST_1_LOWERCASE_LETTER +
-            USERS_MESSAGES.CONFIRM_PASSWORD_MUST_CONTAIN_AT_LEAST_1_NUMBER +
-            USERS_MESSAGES.CONFIRM_PASSWORD_MUST_CONTAIN_AT_LEAST_1_SPECIAL_CHARACTER
-        },
-        custom: {
-          options: (value: string, { req }) => {
-            if (value != req.body.password) {
-              throw new Error(USERS_MESSAGES.CONFIRM_PASSWORD_AND_PASSWORD_DO_NOT_MATCH)
-            }
-            return true
-          }
-        }
-      },
+      password: passwordSchema,
+      confirm_password: confirmPasswordSchema,
       date_of_birth: {
         trim: true,
         notEmpty: { errorMessage: USERS_MESSAGES.DATE_OF_BIRTH_IS_REQUIRED },
@@ -297,45 +341,18 @@ export const forgotPasswordTokenValidator = validate(
 export const verifyForgotPasswordTokenValidator = validate(
   checkSchema(
     {
-      forgot_password_token: {
-        trim: true,
-        custom: {
-          options: async (value: string, { req }) => {
-            // nếu không tồn tại forgot_password_token thì trả về lỗi
-            if (!value) throw new AuthenticationError(USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_REQUIRED)
+      forgot_password_token: forgotPasswordTokenSchema
+    },
+    ['body']
+  )
+)
 
-            try {
-              const decoded_forgot_password_token = await verifyToken({
-                token: value,
-                privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string
-              })
-
-              const user = await UserModel.findOne({
-                _id: new ObjectId(decoded_forgot_password_token.user_id as string),
-                forgot_password_token: value
-              })
-
-              // nếu user không tồn tại
-              if (!user) {
-                throw new NotFoundError(USERS_MESSAGES.USER_NOT_FOUND)
-              }
-
-              // nếu forgot_password_token không khớp với forgot_password_token trong user
-              if (user.forgot_password_token !== value) {
-                throw new AuthenticationError(USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID)
-              }
-
-              ;(req as Request).user = user
-              return true
-            } catch (error) {
-              if (error instanceof JsonWebTokenError) {
-                throw new AuthenticationError(error.message)
-              }
-              throw error
-            }
-          }
-        }
-      }
+export const resetPasswordTokenValidator = validate(
+  checkSchema(
+    {
+      forgot_password_token: forgotPasswordTokenSchema,
+      password: passwordSchema,
+      confirm_password: confirmPasswordSchema
     },
     ['body']
   )

@@ -4,6 +4,7 @@ import {
   loginReqBody,
   logoutReqBody,
   registerReqBody,
+  resetPasswordReqBody,
   TokenPayload
 } from '~/models/requests/User.request'
 import {
@@ -11,7 +12,8 @@ import {
   forgotPasswordService,
   loginService,
   registerService,
-  resendVerifyEmailService
+  resendVerifyEmailService,
+  resetPasswordService
 } from '~/services/users.service'
 import { NextFunction, Request, Response } from 'express'
 import { ApiSuccess } from '~/utils/ApiSuccess'
@@ -182,6 +184,28 @@ export const verifyForgotPasswordController = async (req: Request, res: Response
         USERS_MESSAGES.VERIFY_FORGOT_PASSWORD_SUCCESS,
         200,
         null,
+        new Date().toISOString()
+      ).toResponse()
+    )
+}
+
+export const resetPasswordController = async (
+  req: Request<ParamsDictionary, any, resetPasswordReqBody>,
+  res: Response
+) => {
+  const { _id } = req.user as UserDoc
+  const { forgot_password_token, password, confirm_password } = req.body
+
+  const result = await resetPasswordService(_id.toString(), password)
+
+  return res
+    .status(200)
+    .json(
+      new ApiSuccess(
+        ErrorCodes.SUCCESS,
+        USERS_MESSAGES.RESET_PASSWORD_SUCCESS,
+        200,
+        result,
         new Date().toISOString()
       ).toResponse()
     )

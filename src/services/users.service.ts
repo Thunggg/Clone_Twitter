@@ -196,3 +196,19 @@ export const forgotPasswordService = async (user_id: string) => {
     forgot_password_token: forgotPasswordToken
   }
 }
+
+export const resetPasswordService = async (user_id: string, password: string) => {
+  const hashedPassword = await hashPassword(password)
+
+  const result = await UserModel.findByIdAndUpdate(
+    {
+      _id: new ObjectId(user_id as string)
+    },
+    {
+      $set: { password: hashedPassword, forgot_password_token: '', updatedAt: new Date() }
+    },
+    { new: true }
+  ).select('-password')
+
+  return result
+}
