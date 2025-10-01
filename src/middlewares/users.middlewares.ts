@@ -13,6 +13,7 @@ import { validate } from '~/utils/validation'
 import { ObjectId } from 'mongodb'
 import { TokenPayload } from '~/models/requests/User.request'
 import FollowerModel from '~/models/schemas/Follower.schema'
+import { REGEX_USERNAME } from '~/constants/regex'
 
 const forgotPasswordTokenSchema: ParamSchema = {
   trim: true,
@@ -448,6 +449,8 @@ export const updateMeValidator = validate(
         trim: true,
         custom: {
           options: (value: string) => {
+            if (!REGEX_USERNAME.test(value)) throw new Error(USERS_MESSAGES.USERNAME_IS_INVALID)
+
             return checkUsernameExist(value)
           }
         }
