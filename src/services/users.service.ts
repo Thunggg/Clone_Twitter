@@ -246,14 +246,15 @@ export const followUserService = async (user_id: string, follower_user_id: strin
   if (user_id === follower_user_id) throw new ConflictError(USERS_MESSAGES.USER_ID_IS_INVALID)
 
   // kiểm tra xem user đã follow người đó rồi hay chưa
-  const follower = await FollowerModel.findOne({
+  const isFollowed = await FollowerModel.findOne({
     user_id: new ObjectId(user_id),
     follower_user_id: new ObjectId(follower_user_id)
   })
 
   let result
 
-  if (follower) {
+  // nếu đã follow rồi thì không thể follow lại
+  if (isFollowed) {
     throw new ConflictError(USERS_MESSAGES.USER_ID_IS_INVALID)
   } else {
     result = await FollowerModel.create({
@@ -264,4 +265,25 @@ export const followUserService = async (user_id: string, follower_user_id: strin
   }
 
   return result.toObject()
+}
+
+export const unfollowUserService = async (user_id: string, follower_user_id: string) => {
+  const isFollowed = await FollowerModel.findOne({
+    user_id: new ObjectId(user_id),
+    follower_user_id: new ObjectId(follower_user_id)
+  })
+
+  let result
+
+  // nếu chưa follow thì không thể unfollow
+  if (!isFollowed) {
+    throw new ConflictError(USERS_MESSAGES.ALREADY_UNFOLLOWED)
+  } else {
+    result = await FollowerModel.deleteOne({
+      user_id: new ObjectId(user_id),
+      follower_user_id: new ObjectId(follower_user_id)
+    })
+  }
+
+  return result
 }

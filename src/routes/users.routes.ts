@@ -9,6 +9,7 @@ import {
   registerController,
   resendEmailVerifyController,
   resetPasswordController,
+  unfollowController,
   updateMeController,
   verifyForgotPasswordController
 } from '~/controllers/users.controller'
@@ -24,7 +25,8 @@ import {
   resetPasswordTokenValidator,
   verifiedUserValidator,
   updateMeValidator,
-  followValidator
+  followValidator,
+  unfollowValidator
 } from '~/middlewares/users.middlewares'
 import { updateMeReqBody } from '~/models/requests/User.request'
 import { wrapRequestHandler } from '~/utils/handlers'
@@ -156,7 +158,7 @@ usersRouter.patch(
  * Path: POST /follow
  * Method: POST
  * Header: Authorization: Bearer <access_token>
- * Body: {user_id: string}
+ * Body: {follower_user_id: string}
  */
 usersRouter.post(
   '/follow',
@@ -164,4 +166,19 @@ usersRouter.post(
   verifiedUserValidator,
   followValidator,
   wrapRequestHandler(followController)
+)
+
+/*
+ * Description: Unfollow user
+ * Path:  /follow
+ * Method: DELETE
+ * Header: Authorization: Bearer <access_token>
+ * Body: {follower_user_id: string}
+ */
+usersRouter.delete(
+  '/unfollow/:follower_user_id',
+  accessTokenValidator,
+  verifiedUserValidator,
+  unfollowValidator,
+  wrapRequestHandler(unfollowController)
 )

@@ -1,6 +1,7 @@
 import { JwtPayload } from 'jsonwebtoken'
 import { TokenType } from '~/constants/enum'
 import { UserDoc } from '../schemas/User.schema'
+import { ParamsDictionary } from 'express-serve-static-core'
 
 export interface registerReqBody {
   username: string
@@ -50,5 +51,9 @@ export interface updateMeReqBody {
 }
 
 export interface followReqBody {
+  follower_user_id: string
+}
+
+export interface unfollowReqParams extends ParamsDictionary {
   follower_user_id: string
 }

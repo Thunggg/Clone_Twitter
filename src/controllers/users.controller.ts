@@ -7,6 +7,7 @@ import {
   registerReqBody,
   resetPasswordReqBody,
   TokenPayload,
+  unfollowReqParams,
   updateMeReqBody
 } from '~/models/requests/User.request'
 import {
@@ -18,6 +19,7 @@ import {
   registerService,
   resendVerifyEmailService,
   resetPasswordService,
+  unfollowUserService,
   updateMeService
 } from '~/services/users.service'
 import { NextFunction, Request, Response } from 'express'
@@ -43,7 +45,7 @@ export const registerController = async (req: Request<ParamsDictionary, any, reg
     new Date().toISOString()
   )
 
-  return res.status(201).json(response.toResponse())
+  res.status(201).json(response.toResponse())
 }
 
 export const loginController = async (req: Request<ParamsDictionary, any, loginReqBody>, res: Response) => {
@@ -58,7 +60,7 @@ export const loginController = async (req: Request<ParamsDictionary, any, loginR
     result,
     new Date().toISOString()
   )
-  return res.status(200).json(response.toResponse())
+  res.status(200).json(response.toResponse())
 }
 
 export const logoutController = async (req: Request<ParamsDictionary, any, logoutReqBody>, res: Response) => {
@@ -80,7 +82,7 @@ export const logoutController = async (req: Request<ParamsDictionary, any, logou
     token: refresh_token
   })
 
-  return res
+  res
     .status(200)
     .json(
       new ApiSuccess(
@@ -108,7 +110,7 @@ export const emailVerifyController = async (req: Request, res: Response) => {
   // đã verify rồi thì mình ko thông báo lỗi
   // mà mình trả về status OK với message đã verify trước đó rồi
   if (user.email_verify_token === '') {
-    return res
+    res
       .status(200)
       .json(
         new ApiSuccess(
@@ -119,11 +121,12 @@ export const emailVerifyController = async (req: Request, res: Response) => {
           new Date().toISOString()
         ).toResponse()
       )
+    return
   }
 
   const result = await emailVerifyService(user_id)
 
-  return res
+  res
     .status(200)
     .json(
       new ApiSuccess(
@@ -146,7 +149,7 @@ export const resendEmailVerifyController = async (req: Request, res: Response) =
 
   await resendVerifyEmailService(user_id)
 
-  return res
+  res
     .status(200)
     .json(
       new ApiSuccess(
@@ -168,7 +171,7 @@ export const forgotPasswordController = async (
 
   const result = await forgotPasswordService(_id.toString(), user?.verify as UserVerifyStatus)
 
-  return res
+  res
     .status(200)
     .json(
       new ApiSuccess(
@@ -183,7 +186,7 @@ export const forgotPasswordController = async (
 
 export const verifyForgotPasswordController = async (req: Request, res: Response) => {
   // ko cần xóa forgot_password_token vì có trường hợp user mở lên nhưng để đó hôm sau người ta mới vào đổi mật khẩu
-  return res
+  res
     .status(200)
     .json(
       new ApiSuccess(
@@ -205,7 +208,7 @@ export const resetPasswordController = async (
 
   const result = await resetPasswordService(_id.toString(), password)
 
-  return res
+  res
     .status(200)
     .json(
       new ApiSuccess(
@@ -223,7 +226,7 @@ export const getMeController = async (req: Request, res: Response) => {
 
   const user = await getMeService(user_id)
 
-  return res
+  res
     .status(200)
     .json(
       new ApiSuccess(
@@ -242,7 +245,7 @@ export const updateMeController = async (req: Request<ParamsDictionary, any, upd
 
   const user = await updateMeService(user_id, body)
 
-  return res
+  res
     .status(200)
     .json(
       new ApiSuccess(
@@ -261,7 +264,7 @@ export const followController = async (req: Request<ParamsDictionary, any, follo
 
   const user = await followUserService(user_id, follow_user_id)
 
-  return res
+  res
     .status(200)
     .json(
       new ApiSuccess(
@@ -269,6 +272,25 @@ export const followController = async (req: Request<ParamsDictionary, any, follo
         USERS_MESSAGES.FOLLOW_SUCCESS,
         200,
         user,
+        new Date().toISOString()
+      ).toResponse()
+    )
+}
+
+export const unfollowController = async (req: Request<unfollowReqParams, any, any>, res: Response) => {
+  const user_id = req.decode_authorization?.user_id as string
+  const follower_user_id = req.params.follower_user_id
+
+  const user = await unfollowUserService(user_id, follower_user_id)
+
+  res
+    .status(200)
+    .json(
+      new ApiSuccess(
+        ErrorCodes.SUCCESS,
+        USERS_MESSAGES.UNFOLLOW_SUCCESS,
+        200,
+        [],
         new Date().toISOString()
       ).toResponse()
     )

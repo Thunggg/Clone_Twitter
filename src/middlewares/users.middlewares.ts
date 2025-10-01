@@ -122,6 +122,22 @@ const dateOfBirthSchema: ParamSchema = {
   }
 }
 
+const followerUserIdSchema: ParamSchema = {
+  custom: {
+    options: async (value: string, { req }) => {
+      // truyền lên có phải objectID ko
+      if (!value || !ObjectId.isValid(value)) throw new NotFoundError(USERS_MESSAGES.USER_ID_IS_INVALID)
+
+      // có tồn tại user ko
+      const follower_user = await UserModel.findOne({
+        _id: new ObjectId(value)
+      })
+
+      if (!follower_user) throw new NotFoundError(USERS_MESSAGES.USER_ID_IS_INVALID)
+    }
+  }
+}
+
 export const validateRegister = validate(
   checkSchema(
     {
@@ -462,20 +478,17 @@ export const updateMeValidator = validate(
 export const followValidator = validate(
   checkSchema(
     {
-      follower_user_id: {
-        custom: {
-          options: async (value: string, { req }) => {
-            if (!ObjectId.isValid(value)) throw new NotFoundError(USERS_MESSAGES.USER_ID_IS_INVALID)
-
-            const follower_user = await UserModel.findOne({
-              _id: new ObjectId(value)
-            })
-
-            if (!follower_user) throw new NotFoundError(USERS_MESSAGES.USER_ID_IS_INVALID)
-          }
-        }
-      }
+      follower_user_id: followerUserIdSchema
     },
     ['body']
+  )
+)
+
+export const unfollowValidator = validate(
+  checkSchema(
+    {
+      follower_user_id: followerUserIdSchema
+    },
+    ['params']
   )
 )
