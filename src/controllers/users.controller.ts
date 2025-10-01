@@ -28,6 +28,7 @@ import { AuthenticationError, ConflictError, NotFoundError } from '~/utils/Custo
 import UserModel, { UserDoc } from '~/models/schemas/User.schema'
 import { ObjectId } from 'mongodb'
 import { UserVerifyStatus } from '~/constants/enum'
+import _ from 'lodash'
 
 export const registerController = async (req: Request<ParamsDictionary, any, registerReqBody>, res: Response) => {
   const result = await registerService(req.body)
@@ -234,7 +235,7 @@ export const getMeController = async (req: Request, res: Response) => {
 }
 
 export const updateMeController = async (req: Request<ParamsDictionary, any, updateMeReqBody>, res: Response) => {
-  const body = req.body
+  const { body } = req
   const { user_id } = req.decode_authorization as TokenPayload
 
   const user = await updateMeService(user_id, body)

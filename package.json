@@ -35,11 +35,13 @@
   },
   "dependencies": {
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/lodash": "^4.17.20",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
     "jsonwebtoken": "^9.0.2",
+    "lodash": "^4.17.21",
     "mongodb": "^6.19.0",
     "mongoose": "^8.18.2"
   }
