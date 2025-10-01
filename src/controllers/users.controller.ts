@@ -10,6 +10,7 @@ import {
 import {
   emailVerifyService,
   forgotPasswordService,
+  getMeService,
   loginService,
   registerService,
   resendVerifyEmailService,
@@ -206,6 +207,24 @@ export const resetPasswordController = async (
         USERS_MESSAGES.RESET_PASSWORD_SUCCESS,
         200,
         result,
+        new Date().toISOString()
+      ).toResponse()
+    )
+}
+
+export const getMeController = async (req: Request, res: Response) => {
+  const { user_id } = req.decode_authorization as TokenPayload
+
+  const user = await getMeService(user_id)
+
+  return res
+    .status(200)
+    .json(
+      new ApiSuccess(
+        ErrorCodes.SUCCESS,
+        USERS_MESSAGES.GET_ME_SUCCESS,
+        200,
+        user,
         new Date().toISOString()
       ).toResponse()
     )

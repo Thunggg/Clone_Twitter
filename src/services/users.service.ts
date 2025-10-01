@@ -208,7 +208,13 @@ export const resetPasswordService = async (user_id: string, password: string) =>
       $set: { password: hashedPassword, forgot_password_token: '', updatedAt: new Date() }
     },
     { new: true }
-  ).select('-password')
+  ).select('-password -email_verify_token -forgot_password_token')
 
   return result
+}
+
+export const getMeService = async (user_id: string) => {
+  const user = await UserModel.findById(user_id).select('-password -email_verify_token -forgot_password_token')
+
+  return user
 }
