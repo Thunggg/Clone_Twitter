@@ -4,7 +4,6 @@ import { ApiError } from './ApiError'
 import { ErrorCodes } from '../constants/errorCodes'
 import { HTTP_STATUS } from '~/constants/httpStatus'
 import { AuthenticationError, BaseError } from './CustomErrors'
-import { JsonWebTokenError } from 'jsonwebtoken'
 
 export const validate = (validations: ContextRunner[]) => {
   return async (req: express.Request, res: express.Response, next: express.NextFunction) => {

@@ -12,6 +12,7 @@ import { verifyToken } from '~/utils/jwt'
 import { validate } from '~/utils/validation'
 import { ObjectId } from 'mongodb'
 import { TokenPayload } from '~/models/requests/User.request'
+import FollowerModel from '~/models/schemas/Follower.schema'
 
 const forgotPasswordTokenSchema: ParamSchema = {
   trim: true,
@@ -451,6 +452,27 @@ export const updateMeValidator = validate(
         isLength: {
           options: { min: 1, max: 400 },
           errorMessage: USERS_MESSAGES.COVER_PHOTO_MUST_BE_BETWEEN_0_AND_400_CHARACTERS
+        }
+      }
+    },
+    ['body']
+  )
+)
+
+export const followValidator = validate(
+  checkSchema(
+    {
+      follower_user_id: {
+        custom: {
+          options: async (value: string, { req }) => {
+            if (!ObjectId.isValid(value)) throw new NotFoundError(USERS_MESSAGES.USER_ID_IS_INVALID)
+
+            const follower_user = await UserModel.findOne({
+              _id: new ObjectId(value)
+            })
+
+            if (!follower_user) throw new NotFoundError(USERS_MESSAGES.USER_ID_IS_INVALID)
+          }
         }
       }
     },

@@ -1,5 +1,6 @@
 import {
   emailVerifyReqBody,
+  followReqBody,
   forgotPasswordReqBody,
   loginReqBody,
   logoutReqBody,
@@ -10,6 +11,7 @@ import {
 } from '~/models/requests/User.request'
 import {
   emailVerifyService,
+  followUserService,
   forgotPasswordService,
   getMeService,
   loginService,
@@ -246,6 +248,25 @@ export const updateMeController = async (req: Request<ParamsDictionary, any, upd
       new ApiSuccess(
         ErrorCodes.SUCCESS,
         USERS_MESSAGES.UPDATE_ME_SUCCESS,
+        200,
+        user,
+        new Date().toISOString()
+      ).toResponse()
+    )
+}
+
+export const followController = async (req: Request<ParamsDictionary, any, followReqBody>, res: Response) => {
+  const user_id = req.decode_authorization?.user_id as string
+  const follow_user_id = req.body.follower_user_id as string
+
+  const user = await followUserService(user_id, follow_user_id)
+
+  return res
+    .status(200)
+    .json(
+      new ApiSuccess(
+        ErrorCodes.SUCCESS,
+        USERS_MESSAGES.FOLLOW_SUCCESS,
         200,
         user,
         new Date().toISOString()

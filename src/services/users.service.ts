@@ -8,6 +8,7 @@ import { USERS_MESSAGES } from '~/constants/messages'
 import RefreshTokenModel from '~/models/schemas/RefreshToken.schema'
 import { ConflictError } from '~/utils/CustomErrors'
 import { ObjectId } from 'mongodb'
+import FollowerModel from '~/models/schemas/Follower.schema'
 
 export const registerService = async (reqBody: registerReqBody) => {
   const _id = new ObjectId()
@@ -238,4 +239,29 @@ export const updateMeService = async (user_id: string, updateData: updateMeReqBo
   ).select('-password -email_verify_token -forgot_password_token')
 
   return user
+}
+
+export const followUserService = async (user_id: string, follower_user_id: string) => {
+  // ko thể tự follow chính bản thân mình
+  if (user_id === follower_user_id) throw new ConflictError(USERS_MESSAGES.USER_ID_IS_INVALID)
+
+  // kiểm tra xem user đã follow người đó rồi hay chưa
+  const follower = await FollowerModel.findOne({
+    user_id: new ObjectId(user_id),
+    follower_user_id: new ObjectId(follower_user_id)
+  })
+
+  let result
+
+  if (follower) {
+    throw new ConflictError(USERS_MESSAGES.USER_ID_IS_INVALID)
+  } else {
+    result = await FollowerModel.create({
+      user_id: new ObjectId(user_id),
+      follower_user_id: new ObjectId(follower_user_id),
+      created_at: new Date()
+    })
+  }
+
+  return result.toObject()
 }

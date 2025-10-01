@@ -64,5 +64,7 @@ export const USERS_MESSAGES = {
   AVATAR_MUST_BE_A_STRING: 'Avatar must be a string',
   AVATAR_MUST_BE_BETWEEN_0_AND_400_CHARACTERS: 'Avatar must be between 0-400 characters',
   COVER_PHOTO_MUST_BE_A_STRING: 'Cover photo must be a string',
-  COVER_PHOTO_MUST_BE_BETWEEN_0_AND_400_CHARACTERS: 'Cover photo must be between 0-400 characters'
+  COVER_PHOTO_MUST_BE_BETWEEN_0_AND_400_CHARACTERS: 'Cover photo must be between 0-400 characters',
+  FOLLOW_SUCCESS: 'Follow successfully',
+  USER_ID_IS_INVALID: 'User id is invalid'
 } as const
