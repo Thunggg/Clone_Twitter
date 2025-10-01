@@ -1,4 +1,4 @@
-import { Request } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import { checkSchema, ParamSchema } from 'express-validator'
 import { JsonWebTokenError } from 'jsonwebtoken'
 import { TokenType, UserVerifyStatus } from '~/constants/enum'
@@ -6,11 +6,12 @@ import { USERS_MESSAGES } from '~/constants/messages'
 import RefreshTokenModel from '~/models/schemas/RefreshToken.schema'
 import UserModel from '~/models/schemas/User.schema'
 import { checkEmailExist, checkUsernameExist } from '~/services/users.service'
-import { comparePassword, hashPassword } from '~/utils/bcrypt'
-import { AuthenticationError, NotFoundError } from '~/utils/CustomErrors'
+import { comparePassword } from '~/utils/bcrypt'
+import { AuthenticationError, AuthorizationError, NotFoundError } from '~/utils/CustomErrors'
 import { verifyToken } from '~/utils/jwt'
 import { validate } from '~/utils/validation'
 import { ObjectId } from 'mongodb'
+import { TokenPayload } from '~/models/requests/User.request'
 
 const forgotPasswordTokenSchema: ParamSchema = {
   trim: true,
@@ -86,16 +87,54 @@ const confirmPasswordSchema: ParamSchema = {
   }
 }
 
+const nameSchema: ParamSchema = {
+  trim: true,
+  isLength: {
+    options: { min: 3, max: 50 },
+    errorMessage: USERS_MESSAGES.USER_NAME_MUST_BE_BETWEEN_3_AND_50_CHARACTERS
+  }
+}
+
+const dateOfBirthSchema: ParamSchema = {
+  trim: true,
+  isISO8601: {
+    options: {
+      strict: true,
+      strictSeparator: true
+    },
+    errorMessage: USERS_MESSAGES.DATE_OF_BIRTH_IS_INVALID
+  },
+  custom: {
+    options: (value: string) => {
+      const dob = new Date(value)
+      const today = new Date()
+
+      if (isNaN(dob.getTime())) throw new Error(USERS_MESSAGES.DATE_OF_BIRTH_IS_INVALID)
+
+      if (dob > today) throw new Error(USERS_MESSAGES.DATE_OF_BIRTH_MUST_BE_BEFORE_TODAY)
+
+      const age = today.getFullYear() - dob.getFullYear()
+      if (age < 13) throw new Error(USERS_MESSAGES.DATE_OF_BIRTH_MUST_BE_13_YEARS_OR_OLDER)
+
+      return true
+    }
+  }
+}
+
 export const validateRegister = validate(
   checkSchema(
     {
+      name: {
+        ...nameSchema,
+        notEmpty: { errorMessage: USERS_MESSAGES.NAME_IS_REQUIRED }
+      },
       username: {
-        trim: true,
         notEmpty: { errorMessage: USERS_MESSAGES.NAME_IS_REQUIRED },
         isLength: {
           options: { min: 3, max: 50 },
-          errorMessage: USERS_MESSAGES.NAME_MUST_BE_BETWEEN_3_AND_50_CHARACTERS
+          errorMessage: USERS_MESSAGES.USER_NAME_MUST_BE_BETWEEN_3_AND_50_CHARACTERS
         },
+        trim: true,
         custom: {
           options: (value: string) => {
             return checkUsernameExist(value)
@@ -115,30 +154,8 @@ export const validateRegister = validate(
       password: passwordSchema,
       confirm_password: confirmPasswordSchema,
       date_of_birth: {
-        trim: true,
-        notEmpty: { errorMessage: USERS_MESSAGES.DATE_OF_BIRTH_IS_REQUIRED },
-        isISO8601: {
-          options: {
-            strict: true,
-            strictSeparator: true
-          },
-          errorMessage: USERS_MESSAGES.DATE_OF_BIRTH_IS_INVALID
-        },
-        custom: {
-          options: (value: string) => {
-            const dob = new Date(value)
-            const today = new Date()
-
-            if (isNaN(dob.getTime())) throw new Error(USERS_MESSAGES.DATE_OF_BIRTH_IS_INVALID)
-
-            if (dob > today) throw new Error(USERS_MESSAGES.DATE_OF_BIRTH_MUST_BE_BEFORE_TODAY)
-
-            const age = today.getFullYear() - dob.getFullYear()
-            if (age < 13) throw new Error(USERS_MESSAGES.DATE_OF_BIRTH_MUST_BE_13_YEARS_OR_OLDER)
-
-            return true
-          }
-        }
+        ...dateOfBirthSchema,
+        notEmpty: { errorMessage: USERS_MESSAGES.DATE_OF_BIRTH_IS_REQUIRED }
       }
     },
     ['body']
@@ -169,7 +186,7 @@ export const validateLogin = validate(
               throw new AuthenticationError(USERS_MESSAGES.WRONG_USERNAME_OR_PASSWORD)
             }
 
-            req.user = user
+            ;(req as Request).user = user
             return true
           }
         }
@@ -353,6 +370,89 @@ export const resetPasswordTokenValidator = validate(
       forgot_password_token: forgotPasswordTokenSchema,
       password: passwordSchema,
       confirm_password: confirmPasswordSchema
+    },
+    ['body']
+  )
+)
+
+export const verifiedUserValidator = (req: Request, res: Response, next: NextFunction) => {
+  const { verify } = req.decode_authorization as TokenPayload
+
+  if (verify !== UserVerifyStatus.Verified) {
+    return next(new AuthorizationError(USERS_MESSAGES.USER_IS_NOT_VERIFIED))
+  }
+  next()
+}
+
+export const updateMeValidator = validate(
+  checkSchema(
+    {
+      name: {
+        ...nameSchema,
+        optional: true
+      },
+      date_of_birth: {
+        ...dateOfBirthSchema,
+        optional: true
+      },
+      bio: {
+        optional: true,
+        isString: { errorMessage: USERS_MESSAGES.BIO_MUST_BE_A_STRING },
+        trim: true,
+        isLength: {
+          options: { min: 1, max: 200 },
+          errorMessage: USERS_MESSAGES.BIO_MUST_BE_BETWEEN_0_AND_200_CHARACTERS
+        }
+      },
+      location: {
+        optional: true,
+        isString: { errorMessage: USERS_MESSAGES.LOCATION_MUST_BE_A_STRING },
+        trim: true,
+        isLength: {
+          options: { min: 1, max: 200 },
+          errorMessage: USERS_MESSAGES.LOCATION_MUST_BE_BETWEEN_0_AND_200_CHARACTERS
+        }
+      },
+      website: {
+        optional: true,
+        isString: { errorMessage: USERS_MESSAGES.WEBSITE_MUST_BE_A_STRING },
+        trim: true,
+        isLength: {
+          options: { min: 1, max: 200 },
+          errorMessage: USERS_MESSAGES.WEBSITE_MUST_BE_BETWEEN_0_AND_200_CHARACTERS
+        }
+      },
+      username: {
+        optional: true,
+        isLength: {
+          options: { min: 3, max: 50 },
+          errorMessage: USERS_MESSAGES.USER_NAME_MUST_BE_BETWEEN_3_AND_50_CHARACTERS
+        },
+        trim: true,
+        custom: {
+          options: (value: string) => {
+            return checkUsernameExist(value)
+          }
+        }
+      },
+      avatar: {
+        optional: true,
+        isString: { errorMessage: USERS_MESSAGES.AVATAR_MUST_BE_A_STRING },
+        trim: true,
+        isLength: {
+          options: { min: 1, max: 400 },
+          errorMessage: USERS_MESSAGES.AVATAR_MUST_BE_BETWEEN_0_AND_400_CHARACTERS
+        }
+      },
+      cover_photo: {
+        optional: true,
+        isString: { errorMessage: USERS_MESSAGES.COVER_PHOTO_MUST_BE_A_STRING },
+        trim: true,
+        isLength: {
+          options: { min: 1, max: 400 },
+          errorMessage: USERS_MESSAGES.COVER_PHOTO_MUST_BE_BETWEEN_0_AND_400_CHARACTERS
+        }
+      }
     },
     ['body']
   )

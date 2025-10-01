@@ -1,4 +1,4 @@
-import { registerReqBody } from '~/models/requests/User.request'
+import { registerReqBody, updateMeReqBody } from '~/models/requests/User.request'
 import UserModel from '~/models/schemas/User.schema'
 import { hashPassword } from '~/utils/bcrypt'
 import { TokenType, UserVerifyStatus } from '~/constants/enum'
@@ -13,7 +13,7 @@ export const registerService = async (reqBody: registerReqBody) => {
   const _id = new ObjectId()
   const user_id = _id.toString()
 
-  const emailVerifyToken = await signEmailVerifyTokenService(user_id)
+  const emailVerifyToken = await signEmailVerifyTokenService({ user_id, verify: UserVerifyStatus.Unverified })
 
   const newUser = await UserModel.create({
     ...reqBody,
@@ -24,8 +24,8 @@ export const registerService = async (reqBody: registerReqBody) => {
   })
 
   const [access_token, refresh_token] = await Promise.all([
-    signAccessTokenService(user_id),
-    signRefreshTokenService(user_id)
+    signAccessTokenService({ user_id, verify: UserVerifyStatus.Unverified }),
+    signRefreshTokenService({ user_id, verify: UserVerifyStatus.Unverified })
   ])
 
   await RefreshTokenModel.create({
@@ -43,10 +43,11 @@ export const registerService = async (reqBody: registerReqBody) => {
   }
 }
 
-export const signAccessTokenService = (user_id: string) => {
+export const signAccessTokenService = ({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) => {
   return signToken({
     payload: {
       user_id,
+      verify,
       token_type: TokenType.AccessToken
     },
     privateKey: process.env.JWT_SECRET_ACCESS_TOKEN as string,
@@ -56,7 +57,7 @@ export const signAccessTokenService = (user_id: string) => {
   })
 }
 
-export const signRefreshTokenService = (user_id: string) => {
+export const signRefreshTokenService = ({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) => {
   return signToken({
     payload: {
       user_id,
@@ -69,7 +70,7 @@ export const signRefreshTokenService = (user_id: string) => {
   })
 }
 
-export const signEmailVerifyTokenService = (user_id: string) => {
+export const signEmailVerifyTokenService = ({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) => {
   return signToken({
     payload: {
       user_id,
@@ -82,7 +83,7 @@ export const signEmailVerifyTokenService = (user_id: string) => {
   })
 }
 
-export const signForgotPasswordTokenService = (user_id: string) => {
+export const signForgotPasswordTokenService = ({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) => {
   return signToken({
     payload: {
       user_id,
@@ -119,10 +120,10 @@ export const checkUsernameExist = async (username: string) => {
   return true
 }
 
-export const loginService = async (user_id: string) => {
+export const loginService = async (user_id: string, verify: UserVerifyStatus) => {
   const [access_token, refresh_token] = await Promise.all([
-    signAccessTokenService(user_id),
-    signRefreshTokenService(user_id)
+    signAccessTokenService({ user_id, verify }),
+    signRefreshTokenService({ user_id, verify })
   ])
   await RefreshTokenModel.create({
     token: refresh_token,
@@ -137,8 +138,8 @@ export const loginService = async (user_id: string) => {
 
 export const emailVerifyService = async (user_id: string) => {
   const [access_token, refresh_token] = await Promise.all([
-    signAccessTokenService(user_id),
-    signRefreshTokenService(user_id),
+    signAccessTokenService({ user_id, verify: UserVerifyStatus.Verified }),
+    signRefreshTokenService({ user_id, verify: UserVerifyStatus.Verified }),
     UserModel.updateOne(
       {
         _id: new ObjectId(user_id as string)
@@ -160,7 +161,7 @@ export const emailVerifyService = async (user_id: string) => {
 }
 
 export const resendVerifyEmailService = async (user_id: string) => {
-  const emailVerifyToken = await signEmailVerifyTokenService(user_id)
+  const emailVerifyToken = await signEmailVerifyTokenService({ user_id, verify: UserVerifyStatus.Unverified })
 
   await UserModel.updateOne(
     {
@@ -175,8 +176,8 @@ export const resendVerifyEmailService = async (user_id: string) => {
   )
 }
 
-export const forgotPasswordService = async (user_id: string) => {
-  const forgotPasswordToken = await signForgotPasswordTokenService(user_id)
+export const forgotPasswordService = async (user_id: string, verify: UserVerifyStatus) => {
+  const forgotPasswordToken = await signForgotPasswordTokenService({ user_id, verify })
 
   await UserModel.updateOne(
     {
@@ -215,6 +216,26 @@ export const resetPasswordService = async (user_id: string, password: string) =>
 
 export const getMeService = async (user_id: string) => {
   const user = await UserModel.findById(user_id).select('-password -email_verify_token -forgot_password_token')
+
+  return user
+}
+
+export const updateMeService = async (user_id: string, updateData: updateMeReqBody) => {
+  const date_of_birth = updateData.date_of_birth ? new Date(updateData.date_of_birth) : updateData.date_of_birth
+
+  const user = await UserModel.findOneAndUpdate(
+    {
+      _id: new ObjectId(user_id as string)
+    },
+    {
+      $set: {
+        ...updateData,
+        date_of_birth: date_of_birth,
+        updatedAt: new Date()
+      }
+    },
+    { new: true, runValidators: false }
+  ).select('-password -email_verify_token -forgot_password_token')
 
   return user
 }

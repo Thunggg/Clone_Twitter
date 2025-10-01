@@ -1,6 +1,9 @@
 export const USERS_MESSAGES = {
   VALIDATION_ERROR: 'Validation error',
-  NAME_IS_REQUIRED: 'Name is required',
+  USER_NAME_IS_REQUIRED: 'UserName is required',
+  USER_NAME_MUST_BE_BETWEEN_3_AND_50_CHARACTERS: 'UserName must be between 3-50 characters',
+
+  NAME_IS_REQUIRED: 'Full name is required',
   NAME_MUST_BE_BETWEEN_3_AND_50_CHARACTERS: 'Name must be between 3-50 characters',
   EMAIL_IS_REQUIRED: 'Email is required',
   EMAIL_IS_INVALID: 'Email is invalid',
@@ -49,5 +52,17 @@ export const USERS_MESSAGES = {
   VERIFY_FORGOT_PASSWORD_SUCCESS: 'Verify forgot password successfully',
   FORGOT_PASSWORD_TOKEN_IS_INVALID: 'Forgot password token is invalid',
   RESET_PASSWORD_SUCCESS: 'Reset password successfully',
-  GET_ME_SUCCESS: 'Get me successfully'
+  GET_ME_SUCCESS: 'Get me successfully',
+  USER_IS_NOT_VERIFIED: 'User is not verified',
+  UPDATE_ME_SUCCESS: 'Update me successfully',
+  BIO_MUST_BE_A_STRING: 'Bio must be a string',
+  BIO_MUST_BE_BETWEEN_0_AND_200_CHARACTERS: 'Bio must be between 0-200 characters',
+  LOCATION_MUST_BE_A_STRING: 'Location must be a string',
+  LOCATION_MUST_BE_BETWEEN_0_AND_200_CHARACTERS: 'Location must be between 0-200 characters',
+  WEBSITE_MUST_BE_A_STRING: 'Website must be a string',
+  WEBSITE_MUST_BE_BETWEEN_0_AND_200_CHARACTERS: 'Website must be between 0-200 characters',
+  AVATAR_MUST_BE_A_STRING: 'Avatar must be a string',
+  AVATAR_MUST_BE_BETWEEN_0_AND_400_CHARACTERS: 'Avatar must be between 0-400 characters',
+  COVER_PHOTO_MUST_BE_A_STRING: 'Cover photo must be a string',
+  COVER_PHOTO_MUST_BE_BETWEEN_0_AND_400_CHARACTERS: 'Cover photo must be between 0-400 characters'
 } as const

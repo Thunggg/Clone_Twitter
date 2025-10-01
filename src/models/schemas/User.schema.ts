@@ -7,6 +7,13 @@ const UserSchema = new Schema(
       type: Schema.Types.ObjectId,
       required: true
     },
+    name: {
+      type: String,
+      trim: true,
+      minlength: 3,
+      maxlength: 50,
+      required: true
+    },
     username: {
       type: String,
       required: true,
@@ -42,6 +49,14 @@ const UserSchema = new Schema(
       default: ''
     },
     bio: {
+      type: String,
+      default: ''
+    },
+    location: {
+      type: String,
+      default: ''
+    },
+    website: {
       type: String,
       default: ''
     },

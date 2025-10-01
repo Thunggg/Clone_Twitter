@@ -1,5 +1,6 @@
 import { JwtPayload } from 'jsonwebtoken'
 import { TokenType } from '~/constants/enum'
+import { UserDoc } from '../schemas/User.schema'
 
 export interface registerReqBody {
   username: string
@@ -9,6 +10,7 @@ export interface registerReqBody {
 }
 
 export interface loginReqBody {
+  user: UserDoc
   email: string
   password: string
 }
@@ -34,4 +36,15 @@ export interface resetPasswordReqBody {
   forgot_password_token: string
   password: string
   confirm_password: string
+}
+
+export interface updateMeReqBody {
+  name?: string
+  date_of_birth?: string
+  bio?: string
+  location?: string
+  website?: string
+  username?: string
+  avatar?: string
+  cover_photo?: string
 }

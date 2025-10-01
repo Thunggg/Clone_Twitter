@@ -5,7 +5,8 @@ import {
   logoutReqBody,
   registerReqBody,
   resetPasswordReqBody,
-  TokenPayload
+  TokenPayload,
+  updateMeReqBody
 } from '~/models/requests/User.request'
 import {
   emailVerifyService,
@@ -14,7 +15,8 @@ import {
   loginService,
   registerService,
   resendVerifyEmailService,
-  resetPasswordService
+  resetPasswordService,
+  updateMeService
 } from '~/services/users.service'
 import { NextFunction, Request, Response } from 'express'
 import { ApiSuccess } from '~/utils/ApiSuccess'
@@ -45,7 +47,7 @@ export const loginController = async (req: Request<ParamsDictionary, any, loginR
   const { user } = req
   const _id = user?._id.toString()
 
-  const result = await loginService(_id as string)
+  const result = await loginService(_id as string, user?.verify as UserVerifyStatus)
   const response = new ApiSuccess(
     ErrorCodes.SUCCESS,
     USERS_MESSAGES.LOGIN_SUCCESS,
@@ -159,8 +161,9 @@ export const forgotPasswordController = async (
   res: Response
 ) => {
   const { _id } = req.user as UserDoc
+  const user = req.user as UserDoc
 
-  const result = await forgotPasswordService(_id.toString())
+  const result = await forgotPasswordService(_id.toString(), user?.verify as UserVerifyStatus)
 
   return res
     .status(200)
@@ -223,6 +226,25 @@ export const getMeController = async (req: Request, res: Response) => {
       new ApiSuccess(
         ErrorCodes.SUCCESS,
         USERS_MESSAGES.GET_ME_SUCCESS,
+        200,
+        user,
+        new Date().toISOString()
+      ).toResponse()
+    )
+}
+
+export const updateMeController = async (req: Request<ParamsDictionary, any, updateMeReqBody>, res: Response) => {
+  const body = req.body
+  const { user_id } = req.decode_authorization as TokenPayload
+
+  const user = await updateMeService(user_id, body)
+
+  return res
+    .status(200)
+    .json(
+      new ApiSuccess(
+        ErrorCodes.SUCCESS,
+        USERS_MESSAGES.UPDATE_ME_SUCCESS,
         200,
         user,
         new Date().toISOString()
