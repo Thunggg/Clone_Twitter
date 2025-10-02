@@ -1,4 +1,5 @@
 import {
+  changePasswordReqBody,
   emailVerifyReqBody,
   followReqBody,
   forgotPasswordReqBody,
@@ -11,6 +12,7 @@ import {
   updateMeReqBody
 } from '~/models/requests/User.request'
 import {
+  changePasswordService,
   emailVerifyService,
   followUserService,
   forgotPasswordService,
@@ -291,6 +293,28 @@ export const unfollowController = async (req: Request<unfollowReqParams, any, an
         USERS_MESSAGES.UNFOLLOW_SUCCESS,
         200,
         [],
+        new Date().toISOString()
+      ).toResponse()
+    )
+}
+
+export const changePasswordController = async (
+  req: Request<ParamsDictionary, any, changePasswordReqBody>,
+  res: Response
+) => {
+  const { old_password, password, confirm_password } = req.body
+  const user_id = (req as Request).decode_authorization?.user_id as string
+
+  const user = await changePasswordService(user_id, old_password, password, confirm_password)
+
+  res
+    .status(200)
+    .json(
+      new ApiSuccess(
+        ErrorCodes.SUCCESS,
+        USERS_MESSAGES.CHANGE_PASSWORD_SUCCESS,
+        200,
+        user,
         new Date().toISOString()
       ).toResponse()
     )

@@ -287,3 +287,23 @@ export const unfollowUserService = async (user_id: string, follower_user_id: str
 
   return result
 }
+
+export const changePasswordService = async (
+  user_id: string,
+  old_password: string,
+  password: string,
+  confirm_password: string
+) => {
+  const hashedPassword = await hashPassword(password)
+
+  const user = await UserModel.findByIdAndUpdate(
+    {
+      _id: new ObjectId(user_id as string)
+    },
+    {
+      $set: { password: hashedPassword, updatedAt: new Date() }
+    }
+  ).select('-password -email_verify_token -forgot_password_token')
+
+  return user
+}

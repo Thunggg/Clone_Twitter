@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import {
+  changePasswordController,
   emailVerifyController,
   followController,
   forgotPasswordController,
@@ -26,7 +27,8 @@ import {
   verifiedUserValidator,
   updateMeValidator,
   followValidator,
-  unfollowValidator
+  unfollowValidator,
+  changePasswordValidator
 } from '~/middlewares/users.middlewares'
 import { updateMeReqBody } from '~/models/requests/User.request'
 import { wrapRequestHandler } from '~/utils/handlers'
@@ -181,4 +183,12 @@ usersRouter.delete(
   verifiedUserValidator,
   unfollowValidator,
   wrapRequestHandler(unfollowController)
+)
+
+usersRouter.put(
+  '/change-password',
+  accessTokenValidator,
+  verifiedUserValidator,
+  changePasswordValidator,
+  wrapRequestHandler(changePasswordController)
 )

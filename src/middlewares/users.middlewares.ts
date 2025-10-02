@@ -6,7 +6,7 @@ import { USERS_MESSAGES } from '~/constants/messages'
 import RefreshTokenModel from '~/models/schemas/RefreshToken.schema'
 import UserModel from '~/models/schemas/User.schema'
 import { checkEmailExist, checkUsernameExist } from '~/services/users.service'
-import { comparePassword } from '~/utils/bcrypt'
+import { comparePassword, hashPassword } from '~/utils/bcrypt'
 import { AuthenticationError, AuthorizationError, NotFoundError } from '~/utils/CustomErrors'
 import { verifyToken } from '~/utils/jwt'
 import { validate } from '~/utils/validation'
@@ -493,5 +493,32 @@ export const unfollowValidator = validate(
       follower_user_id: followerUserIdSchema
     },
     ['params']
+  )
+)
+
+export const changePasswordValidator = validate(
+  checkSchema(
+    {
+      old_password: {
+        ...passwordSchema,
+        custom: {
+          options: async (value: string, { req }) => {
+            // kiểm tra có tồn tại trong database hay ko
+            const user_id = (req as Request).decode_authorization?.user_id
+            const isPasswordExits = await UserModel.findOne({
+              _id: new ObjectId(user_id as string)
+            })
+            if (!isPasswordExits) throw new NotFoundError(USERS_MESSAGES.OLD_PASSWORD_IS_INVALID)
+
+            // kiểm tra xem có khớp với password trong database hay ko
+            const isMatch = await comparePassword(value, isPasswordExits.password)
+            if (!isMatch) throw new NotFoundError(USERS_MESSAGES.OLD_PASSWORD_IS_INVALID)
+          }
+        }
+      },
+      password: passwordSchema,
+      confirm_password: confirmPasswordSchema
+    },
+    ['body']
   )
 )
