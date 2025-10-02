@@ -9,6 +9,7 @@ import RefreshTokenModel from '~/models/schemas/RefreshToken.schema'
 import { ConflictError } from '~/utils/CustomErrors'
 import { ObjectId } from 'mongodb'
 import FollowerModel from '~/models/schemas/Follower.schema'
+import _ from 'lodash'
 
 export const registerService = async (reqBody: registerReqBody) => {
   const _id = new ObjectId()
@@ -224,18 +225,21 @@ export const getMeService = async (user_id: string) => {
 export const updateMeService = async (user_id: string, updateData: updateMeReqBody) => {
   const date_of_birth = updateData.date_of_birth ? new Date(updateData.date_of_birth) : updateData.date_of_birth
 
+  const update = _.pickBy({
+    ...updateData,
+    date_of_birth: date_of_birth,
+    updatedAt: new Date()
+  },
+  (value) => value !== undefined)
+
   const user = await UserModel.findOneAndUpdate(
     {
       _id: new ObjectId(user_id as string)
     },
     {
-      $set: {
-        ...updateData,
-        date_of_birth: date_of_birth,
-        updatedAt: new Date()
-      }
+      $set: {  ...update}
     },
-    { new: true, runValidators: false }
+    { new: true}
   ).select('-password -email_verify_token -forgot_password_token')
 
   return user

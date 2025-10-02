@@ -135,6 +135,8 @@ const followerUserIdSchema: ParamSchema = {
       })
 
       if (!follower_user) throw new NotFoundError(USERS_MESSAGES.USER_ID_IS_INVALID)
+        
+      return true
     }
   }
 }
