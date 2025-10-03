@@ -156,6 +156,12 @@ export const emailVerifyService = async (user_id: string) => {
     )
   ])
 
+  await RefreshTokenModel.create({
+    token: refresh_token,
+    created_at: new Date(),
+    user_id: user_id
+  })
+
   return {
     access_token,
     refresh_token
@@ -225,21 +231,23 @@ export const getMeService = async (user_id: string) => {
 export const updateMeService = async (user_id: string, updateData: updateMeReqBody) => {
   const date_of_birth = updateData.date_of_birth ? new Date(updateData.date_of_birth) : updateData.date_of_birth
 
-  const update = _.pickBy({
-    ...updateData,
-    date_of_birth: date_of_birth,
-    updatedAt: new Date()
-  },
-  (value) => value !== undefined)
+  const update = _.pickBy(
+    {
+      ...updateData,
+      date_of_birth: date_of_birth,
+      updatedAt: new Date()
+    },
+    (value) => value !== undefined
+  )
 
   const user = await UserModel.findOneAndUpdate(
     {
       _id: new ObjectId(user_id as string)
     },
     {
-      $set: {  ...update}
+      $set: { ...update }
     },
-    { new: true}
+    { new: true }
   ).select('-password -email_verify_token -forgot_password_token')
 
   return user
