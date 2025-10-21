@@ -4,6 +4,7 @@ import { connectDb } from './config/db.config'
 import { errorHandler } from './middlewares/error.middlewares'
 import dotenv from 'dotenv'
 import { mediasRouter } from './routes/media.routes'
+import { initFolder } from './utils/file'
 dotenv.config()
 
 const app = express()
@@ -11,6 +12,9 @@ const app = express()
 app.use(express.json())
 
 connectDb()
+
+// Tạo folder uploads nếu chưa tồn tại
+initFolder()
 
 // routes
 app.get('/', (req, res) => {

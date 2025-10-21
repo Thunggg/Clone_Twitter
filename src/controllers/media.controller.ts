@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import path from "path";
-
+import fs from 'fs'
 
 export const uploadSingleImageController = async (req: Request, res: Response) => {
     const formidable = (await import("formidable")).default
