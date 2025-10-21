@@ -1,23 +1,10 @@
 import { Request, Response } from "express";
 import path from "path";
 import fs from 'fs'
+import { handleUploadFile } from "~/utils/file";
 
 export const uploadSingleImageController = async (req: Request, res: Response) => {
-    const formidable = (await import("formidable")).default
-    const form = formidable({
-        uploadDir: path.resolve("uploads"),
-        maxFiles: 1,
-        keepExtensions: true,
-        maxFileSize: 300 * 1024 //300KB
-    });
+    const data = await handleUploadFile(req)
 
-    form.parse(req, (err, fields, files) => {
-        if(err){
-            console.error(err)
-            res.status(400).json({ message: 'Upload thất bại', error: err.message })
-        }
-        res.status(200).json({
-           message:  "upload thanh cong"
-        })
-    })
+    res.status(200).json(data)
 }
